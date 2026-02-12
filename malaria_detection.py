@@ -17,9 +17,9 @@ from sklearn.model_selection import train_test_split
 from tensorflow.keras import layers, models
 import matplotlib.pyplot as plt
 
-# ============================================
+
 # CONFIGURATION
-# ============================================
+
 IMG_SIZE = 64
 EPOCHS = 10
 BATCH_SIZE = 32
@@ -27,9 +27,8 @@ TEST_SIZE = 0.2
 VAL_SPLIT = 0.15
 RANDOM_STATE = 42
 
-# ============================================
+
 # DATA LOADING
-# ============================================
 
 # Find the dataset path (works on Kaggle)
 DATA_PATH = None
@@ -76,9 +75,9 @@ print(f'\nTotal images: {len(X)}')
 print(f'Image shape: {X[0].shape}')
 print(f'Infected: {sum(y)} | Healthy: {len(y) - sum(y)}')
 
-# ============================================
+
 # TRAIN/TEST SPLIT
-# ============================================
+
 X_train, X_test, y_train, y_test = train_test_split(
     X, y,
     test_size=TEST_SIZE,
@@ -89,9 +88,9 @@ X_train, X_test, y_train, y_test = train_test_split(
 print(f'\nTrain: {X_train.shape[0]} images')
 print(f'Test:  {X_test.shape[0]} images')
 
-# ============================================
+
 # MODEL ARCHITECTURE
-# ============================================
+
 model = models.Sequential([
     # Block 1: Detect basic patterns (edges, spots)
     layers.Conv2D(32, (3, 3), activation='relu', input_shape=(IMG_SIZE, IMG_SIZE, 3)),
@@ -120,9 +119,7 @@ model.compile(
 
 model.summary()
 
-# ============================================
 # TRAINING
-# ============================================
 print('\nTraining...')
 history = model.fit(
     X_train, y_train,
@@ -132,16 +129,12 @@ history = model.fit(
     verbose=1
 )
 
-# ============================================
 # EVALUATION
-# ============================================
 loss, accuracy = model.evaluate(X_test, y_test)
 print(f'\nTest Accuracy: {round(accuracy * 100, 2)}%')
 print(f'Test Loss: {round(loss, 4)}')
 
-# ============================================
 # VISUALIZATION
-# ============================================
 
 # Plot training history
 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 4))
@@ -179,5 +172,3 @@ plt.suptitle('Predictions (Green=Correct, Red=Wrong)')
 plt.tight_layout()
 plt.savefig('predictions.png', dpi=150)
 plt.show()
-
-print('\nDone!')
