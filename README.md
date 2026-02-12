@@ -97,3 +97,13 @@ Rajaraman et al., "Pre-trained convolutional neural networks as feature extracto
 ---
 
 Built by [Scott Antwi](https://github.com/ScottT2-spec) · 17 y/o · Ghana 🇬🇭
+
+## Data Augmentation (Planned)
+
+To push accuracy beyond 95%, these augmentation techniques will be applied:
+- Random horizontal/vertical flips
+- Random rotation (±15°)
+- Random zoom (±10%)
+- Random brightness adjustment
+
+These simulate real-world variation in microscope images.
