@@ -1,12 +1,8 @@
 """
-Malaria Cell Detection — CNN Model
-Built by Scott Antwi
-
-Detects malaria-infected red blood cells from microscope images
-using a Convolutional Neural Network. Trained on the NIH dataset.
+Malaria Cell Detection — CNN trained on NIH blood cell images.
+Classifies cells as Parasitized or Uninfected. 95.43% test accuracy.
 
 Dataset: https://www.kaggle.com/datasets/iarunava/cell-images-for-detecting-malaria
-Accuracy: 95.43% on unseen test data
 """
 
 import os
@@ -17,9 +13,7 @@ from sklearn.model_selection import train_test_split
 from tensorflow.keras import layers, models
 import matplotlib.pyplot as plt
 
-########################################
-# CONFIGURATION
-########################################
+# --- Config ---
 
 IMG_SIZE = 64
 EPOCHS = 10
