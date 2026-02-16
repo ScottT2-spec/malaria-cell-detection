@@ -3,3 +3,4 @@ __pycache__/
 .env
 cell_images/
 *.h5
+web-app/
