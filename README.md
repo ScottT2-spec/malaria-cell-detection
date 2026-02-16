@@ -1,85 +1,54 @@
 # Malaria Cell Detection
 
-AI-powered malaria screening using deep learning. Scan blood cell images through your camera and get instant classification — Parasitized or Uninfected.
+CNN that classifies red blood cells as **Parasitized** (malaria-infected) or **Uninfected** using microscope images from the NIH dataset.
 
-## Live Demo
+**Accuracy:** 95.43% on held-out test data
 
-🔬 [Scan cells now →](http://your-server-url:5001)
+## What It Does
 
-## How It Works
-
-1. Open the web app on your phone or computer
-2. Point your camera at a microscope slide with blood cell sample
-3. Tap **Scan Cell**
-4. The AI model analyzes the cell and returns a diagnosis
+Takes a 64x64 microscope image of a blood cell and predicts whether the Plasmodium parasite is present. Trained on ~27,500 images (balanced classes) from the National Institutes of Health.
 
 ## Model
 
-- **Architecture:** MobileNetV2 (transfer learning) with custom classification head
-- **Dataset:** NIH Malaria Cell Images — 27,558 images (13,779 parasitized + 13,779 uninfected)
-- **Accuracy:** ~96% on validation set
-- **Input:** 128×128 RGB blood cell image
-- **Output:** Binary classification (Parasitized / Uninfected) with confidence score
+3-block CNN built with TensorFlow/Keras:
 
-### Training Pipeline
+- **Block 1:** 32 filters (3x3) → ReLU → MaxPool — picks up edges and color spots
+- **Block 2:** 64 filters (3x3) → ReLU → MaxPool — combines into shapes
+- **Block 3:** 128 filters (3x3) → ReLU → MaxPool — recognizes parasite-like structures
 
-1. Phase 1: Train classification head with frozen MobileNetV2 base (8 epochs)
-2. Phase 2: Fine-tune last 30 layers of MobileNetV2 with low learning rate (8 epochs)
-3. Export to ONNX format for lightweight server deployment
+Then a dense layer (128 units) with 50% dropout, and a sigmoid output for binary classification.
 
-## Tech Stack
+Trained for 10 epochs with Adam optimizer and binary cross-entropy loss. 80/20 train-test split, stratified to keep class balance.
 
-- **Model:** TensorFlow/Keras → ONNX Runtime
-- **Backend:** Python, Flask
-- **Frontend:** HTML/CSS/JavaScript with camera API (getUserMedia)
-- **Deployment:** Cloud server with ONNX Runtime inference
+## Results
 
-## Project Structure
+- **Test accuracy:** 95.43%
+- Generates `training_history.png` (accuracy/loss curves) and `predictions.png` (sample predictions with color-coded correctness)
 
-```
-malaria-cell-detection/
-├── malaria_detection.py        # Original training script (from-scratch CNN)
-├── train_and_export.py         # Transfer learning + ONNX export (run on Kaggle)
-├── web-app/
-│   ├── app.py                  # Flask server
-│   ├── train_model.py          # Local training script
-│   ├── malaria_model.onnx      # Trained model (ONNX format)
-│   └── templates/
-│       └── index.html          # Camera scanner UI
-└── README.md
-```
+## Usage
 
-## Run Locally
+Run on [Kaggle](https://www.kaggle.com/datasets/iarunava/cell-images-for-detecting-malaria) with GPU enabled:
 
 ```bash
-# Install dependencies
-pip install flask onnxruntime pillow
-
-# Start server
-cd web-app
-python app.py
+python malaria_detection.py
 ```
 
-Open `http://localhost:5001` in your browser.
-
-## Train Your Own Model
-
-1. Open `train_and_export.py` in a Kaggle notebook with GPU
-2. Add the [Cell Images for Detecting Malaria](https://www.kaggle.com/datasets/iarunava/cell-images-for-detecting-malaria) dataset
-3. Run — it trains and exports `malaria_model.onnx`
-4. Download the ONNX file and place it in `web-app/`
+It auto-detects the Kaggle dataset path. For local use, put the `cell_images/` folder (with `Parasitized/` and `Uninfected/` subfolders) in the same directory.
 
 ## Dataset
 
-[NIH Malaria Cell Images Dataset](https://lhncbc.nlm.nih.gov/LHC-downloads/downloads.html#malaria-datasets)
-- 27,558 blood cell images
-- Binary: Parasitized (Plasmodium present) vs Uninfected
-- Collected from thin blood smear slide images
+[NIH Malaria Cell Images](https://lhncbc.nlm.nih.gov/LHC-downloads/downloads.html#malaria-datasets)
+- 27,558 images total
+- 13,779 Parasitized + 13,779 Uninfected
+- Thin blood smear slides, stained and photographed under microscope
 
-## Disclaimer
+## What I Learned
 
-This tool is for **educational and screening purposes only**. It is not a medical device. Always confirm results with a qualified healthcare professional.
+- How CNNs extract features hierarchically (edges → shapes → complex patterns)
+- Why stratified splits matter for balanced evaluation
+- The effect of dropout on reducing overfitting in small-ish datasets
+- Image preprocessing and normalization for neural networks
 
 ## Author
 
-**Scott Antwi** — [GitHub](https://github.com/ScottT2-spec) · [Kaggle](https://kaggle.com/scottantwi)
+Scott Antwi — [GitHub](https://github.com/ScottT2-spec) · [Kaggle](https://kaggle.com/scottantwi)
