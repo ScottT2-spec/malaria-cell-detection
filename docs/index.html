@@ -553,6 +553,131 @@
             border-color: var(--border-light);
         }
 
+        /* Choice buttons */
+        .choice-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .choice-btn {
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 32px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Inter', sans-serif;
+            color: var(--text);
+        }
+
+        .choice-btn:hover {
+            background: var(--surface-3);
+            border-color: var(--border-light);
+            transform: translateY(-2px);
+        }
+
+        .choice-icon {
+            width: 40px;
+            height: 40px;
+            margin: 0 auto 16px;
+            opacity: 0.6;
+        }
+
+        .choice-icon svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .choice-btn h3 {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .choice-btn p {
+            font-size: 12px;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+
+        /* Camera */
+        .camera-container {
+            position: relative;
+            border-radius: 16px;
+            overflow: hidden;
+            background: #000;
+        }
+
+        #camera-video {
+            width: 100%;
+            display: block;
+            border-radius: 16px;
+        }
+
+        .camera-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+        }
+
+        .scan-frame {
+            width: 200px;
+            height: 200px;
+            border: 2px solid rgba(255,255,255,0.4);
+            border-radius: 16px;
+            box-shadow: 0 0 0 9999px rgba(0,0,0,0.3);
+        }
+
+        .camera-controls {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 24px;
+            background: rgba(0,0,0,0.6);
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+        }
+
+        .btn-capture {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: transparent;
+            border: 3px solid #fff;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            transition: all 0.2s;
+        }
+
+        .btn-capture:hover {
+            transform: scale(1.05);
+        }
+
+        .btn-capture:active {
+            transform: scale(0.95);
+        }
+
+        .capture-ring {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: #fff;
+            display: block;
+        }
+
         /* Mobile */
         @media (max-width: 600px) {
             .container { padding: 16px; }
@@ -598,7 +723,48 @@
 
     <!-- Upload Section -->
     <div class="upload-section">
-        <div class="upload-zone" id="upload-zone">
+        <!-- Choice buttons -->
+        <div class="choice-row" id="choice-row">
+            <button class="choice-btn" id="scan-btn">
+                <div class="choice-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <circle cx="12" cy="12" r="3" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <h3>Scan</h3>
+                <p>Use your camera to capture a blood cell image</p>
+            </button>
+            <button class="choice-btn" id="upload-btn">
+                <div class="choice-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M12 16V4m0 0L8 8m4-4l4 4" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M2 17l.621 2.485A2 2 0 004.561 21h14.878a2 2 0 001.94-1.515L22 17" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <h3>Upload</h3>
+                <p>Upload a blood cell image from your device</p>
+            </button>
+        </div>
+
+        <!-- Camera view -->
+        <div class="camera-container" id="camera-container" style="display:none;">
+            <video id="camera-video" autoplay playsinline></video>
+            <div class="camera-overlay">
+                <div class="scan-frame"></div>
+            </div>
+            <div class="camera-controls">
+                <button class="btn btn-secondary" id="camera-cancel">Cancel</button>
+                <button class="btn btn-capture" id="capture-btn">
+                    <span class="capture-ring"></span>
+                </button>
+                <button class="btn btn-secondary" id="camera-flip">Flip</button>
+            </div>
+        </div>
+        <canvas id="camera-canvas" style="display:none;"></canvas>
+
+        <!-- Upload drop zone -->
+        <div class="upload-zone" id="upload-zone" style="display:none;">
             <div id="upload-placeholder">
                 <div class="upload-icon">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -612,15 +778,18 @@
                     <div class="formats">PNG · JPG · WEBP — Max 10MB</div>
                 </div>
             </div>
-            <div class="preview-container" id="preview-container">
-                <img id="preview-image" alt="Preview">
-                <div class="preview-info" id="preview-info"></div>
-            </div>
         </div>
+
+        <!-- Preview (shared for both scan & upload) -->
+        <div class="preview-container" id="preview-container">
+            <img id="preview-image" alt="Preview">
+            <div class="preview-info" id="preview-info"></div>
+        </div>
+
         <input type="file" id="file-input" accept="image/*">
 
         <div class="btn-row">
-            <button class="btn btn-primary" id="analyze-btn" disabled>
+            <button class="btn btn-primary" id="analyze-btn" disabled style="display:none;">
                 Analyze Cell
             </button>
             <button class="btn btn-secondary" id="reset-btn" style="display:none;">
@@ -783,6 +952,9 @@
     }
 
     // ==================== UI ====================
+    const choiceRow = document.getElementById('choice-row');
+    const scanBtn = document.getElementById('scan-btn');
+    const uploadBtn = document.getElementById('upload-btn');
     const uploadZone = document.getElementById('upload-zone');
     const fileInput = document.getElementById('file-input');
     const previewContainer = document.getElementById('preview-container');
@@ -794,10 +966,88 @@
     const resultSection = document.getElementById('result-section');
     const loadingOverlay = document.getElementById('loading-overlay');
     const loadingText = document.getElementById('loading-text');
+    const cameraContainer = document.getElementById('camera-container');
+    const cameraVideo = document.getElementById('camera-video');
+    const cameraCanvas = document.getElementById('camera-canvas');
+    const captureBtn = document.getElementById('capture-btn');
+    const cameraCancelBtn = document.getElementById('camera-cancel');
+    const cameraFlipBtn = document.getElementById('camera-flip');
 
     let currentFile = null;
+    let imageReady = false;
+    let cameraStream = null;
+    let facingMode = 'environment'; // back camera default
 
-    // Drag & drop
+    // ===== SCAN MODE =====
+    scanBtn.addEventListener('click', async () => {
+        choiceRow.style.display = 'none';
+        cameraContainer.style.display = 'block';
+
+        try {
+            cameraStream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: facingMode, width: { ideal: 640 }, height: { ideal: 640 } }
+            });
+            cameraVideo.srcObject = cameraStream;
+        } catch (err) {
+            alert('Camera access denied. Please allow camera permissions.');
+            closeCamera();
+        }
+    });
+
+    cameraFlipBtn.addEventListener('click', async () => {
+        facingMode = facingMode === 'environment' ? 'user' : 'environment';
+        if (cameraStream) {
+            cameraStream.getTracks().forEach(t => t.stop());
+        }
+        try {
+            cameraStream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: facingMode, width: { ideal: 640 }, height: { ideal: 640 } }
+            });
+            cameraVideo.srcObject = cameraStream;
+        } catch (err) {
+            console.error('Flip failed:', err);
+        }
+    });
+
+    captureBtn.addEventListener('click', () => {
+        cameraCanvas.width = cameraVideo.videoWidth;
+        cameraCanvas.height = cameraVideo.videoHeight;
+        const ctx = cameraCanvas.getContext('2d');
+        ctx.drawImage(cameraVideo, 0, 0);
+
+        const dataUrl = cameraCanvas.toDataURL('image/png');
+        previewImage.src = dataUrl;
+        previewInfo.textContent = 'Camera capture · Live scan';
+        imageReady = true;
+
+        closeCamera();
+        previewContainer.classList.add('visible');
+        analyzeBtn.style.display = '';
+        analyzeBtn.disabled = false;
+        resultSection.classList.remove('visible');
+    });
+
+    cameraCancelBtn.addEventListener('click', () => {
+        closeCamera();
+    });
+
+    function closeCamera() {
+        if (cameraStream) {
+            cameraStream.getTracks().forEach(t => t.stop());
+            cameraStream = null;
+        }
+        cameraContainer.style.display = 'none';
+        if (!imageReady) {
+            choiceRow.style.display = 'grid';
+        }
+    }
+
+    // ===== UPLOAD MODE =====
+    uploadBtn.addEventListener('click', () => {
+        choiceRow.style.display = 'none';
+        uploadZone.style.display = 'block';
+    });
+
     uploadZone.addEventListener('dragover', (e) => {
         e.preventDefault();
         uploadZone.classList.add('dragover');
@@ -829,22 +1079,23 @@
         }
 
         currentFile = file;
+        imageReady = true;
         const reader = new FileReader();
         reader.onload = (e) => {
             previewImage.src = e.target.result;
-            uploadPlaceholder.style.display = 'none';
+            uploadZone.style.display = 'none';
             previewContainer.classList.add('visible');
-            uploadZone.classList.add('has-image');
             previewInfo.textContent = `${file.name} · ${(file.size / 1024).toFixed(1)}KB`;
+            analyzeBtn.style.display = '';
             analyzeBtn.disabled = false;
             resultSection.classList.remove('visible');
         };
         reader.readAsDataURL(file);
     }
 
-    // Analyze
+    // ===== ANALYZE =====
     analyzeBtn.addEventListener('click', async () => {
-        if (!currentFile) return;
+        if (!imageReady) return;
 
         loadingOverlay.classList.add('visible');
         loadingText.textContent = 'Loading model...';
@@ -853,7 +1104,6 @@
             if (!modelLoaded) await loadModel();
             loadingText.textContent = 'Analyzing cell...';
 
-            // Small delay for UX
             await new Promise(r => setTimeout(r, 500));
 
             const result = await analyzeImage(previewImage);
@@ -899,12 +1149,14 @@
     // Reset
     resetBtn.addEventListener('click', () => {
         currentFile = null;
+        imageReady = false;
         fileInput.value = '';
         previewContainer.classList.remove('visible');
-        uploadPlaceholder.style.display = '';
-        uploadZone.classList.remove('has-image');
+        uploadZone.style.display = 'none';
+        cameraContainer.style.display = 'none';
+        choiceRow.style.display = 'grid';
         analyzeBtn.disabled = true;
-        analyzeBtn.style.display = '';
+        analyzeBtn.style.display = 'none';
         resetBtn.style.display = 'none';
         resultSection.classList.remove('visible');
         document.getElementById('confidence-bar').style.width = '0%';
