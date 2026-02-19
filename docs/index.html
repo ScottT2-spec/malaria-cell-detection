@@ -15,22 +15,22 @@
         }
 
         :root {
-            --bg: #0a0a0a;
-            --surface: #111111;
-            --surface-2: #1a1a1a;
-            --surface-3: #222222;
-            --border: #2a2a2a;
-            --border-light: #333333;
-            --text: #ffffff;
-            --text-secondary: #888888;
-            --text-muted: #555555;
-            --accent: #ffffff;
-            --infected: #ff3333;
-            --infected-bg: rgba(255, 51, 51, 0.08);
-            --infected-border: rgba(255, 51, 51, 0.3);
-            --healthy: #00cc66;
-            --healthy-bg: rgba(0, 204, 102, 0.08);
-            --healthy-border: rgba(0, 204, 102, 0.3);
+            --bg: #ffffff;
+            --surface: #f8f9fa;
+            --surface-2: #f0f2f5;
+            --surface-3: #e8eaed;
+            --border: #d0d5dd;
+            --border-light: #b8c0cc;
+            --text: #1a3a5c;
+            --text-secondary: #3d6b99;
+            --text-muted: #7a9cc6;
+            --accent: #1a3a5c;
+            --infected: #cc2222;
+            --infected-bg: rgba(204, 34, 34, 0.06);
+            --infected-border: rgba(204, 34, 34, 0.25);
+            --healthy: #1a8a4a;
+            --healthy-bg: rgba(26, 138, 74, 0.06);
+            --healthy-border: rgba(26, 138, 74, 0.25);
         }
 
         body {
@@ -41,21 +41,7 @@
             overflow-x: hidden;
         }
 
-        /* Subtle grid background */
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image: 
-                linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
-            background-size: 60px 60px;
-            pointer-events: none;
-            z-index: 0;
-        }
+        /* Clean background - no grid */
 
         .container {
             max-width: 900px;
@@ -90,14 +76,8 @@
         .header-badge .dot {
             width: 6px;
             height: 6px;
-            background: var(--healthy);
+            background: #1a8a4a;
             border-radius: 50%;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.4; }
         }
 
         .header h1 {
@@ -109,10 +89,7 @@
         }
 
         .header h1 span {
-            background: linear-gradient(135deg, #fff 0%, #666 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            color: #1a3a5c;
         }
 
         .header p {
@@ -262,13 +239,12 @@
         }
 
         .btn-primary {
-            background: var(--text);
-            color: var(--bg);
+            background: #1a3a5c;
+            color: #ffffff;
         }
 
         .btn-primary:hover {
-            opacity: 0.9;
-            transform: translateY(-1px);
+            background: #153050;
         }
 
         .btn-primary:disabled {
@@ -407,7 +383,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.8);
+            background: rgba(255,255,255,0.9);
             backdrop-filter: blur(8px);
             z-index: 100;
             justify-content: center;
@@ -424,7 +400,7 @@
             width: 48px;
             height: 48px;
             border: 3px solid var(--border);
-            border-top-color: var(--text);
+            border-top-color: #1a3a5c;
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
         }
