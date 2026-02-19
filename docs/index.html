@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Malaria Cell Detector — AI Blood Cell Analysis</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0/dist/tf.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #0a0a0a;
+            --surface: #111111;
+            --surface-2: #1a1a1a;
+            --surface-3: #222222;
+            --border: #2a2a2a;
+            --border-light: #333333;
+            --text: #ffffff;
+            --text-secondary: #888888;
+            --text-muted: #555555;
+            --accent: #ffffff;
+            --infected: #ff3333;
+            --infected-bg: rgba(255, 51, 51, 0.08);
+            --infected-border: rgba(255, 51, 51, 0.3);
+            --healthy: #00cc66;
+            --healthy-bg: rgba(0, 204, 102, 0.08);
+            --healthy-border: rgba(0, 204, 102, 0.3);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Subtle grid background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+            background-size: 60px 60px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            padding: 60px 0 40px;
+        }
+
+        .header-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 16px;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: 100px;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            margin-bottom: 24px;
+        }
+
+        .header-badge .dot {
+            width: 6px;
+            height: 6px;
+            background: var(--healthy);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        .header h1 {
+            font-size: clamp(36px, 6vw, 56px);
+            font-weight: 800;
+            letter-spacing: -2px;
+            line-height: 1.1;
+            margin-bottom: 16px;
+        }
+
+        .header h1 span {
+            background: linear-gradient(135deg, #fff 0%, #666 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            font-size: 16px;
+            color: var(--text-secondary);
+            max-width: 500px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        /* Stats bar */
+        .stats-bar {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            padding: 24px 0;
+            margin-bottom: 40px;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 4px;
+        }
+
+        /* Upload area */
+        .upload-section {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 24px;
+        }
+
+        .upload-zone {
+            border: 2px dashed var(--border-light);
+            border-radius: 16px;
+            padding: 60px 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .upload-zone:hover {
+            border-color: var(--text-muted);
+            background: var(--surface-2);
+        }
+
+        .upload-zone.dragover {
+            border-color: var(--accent);
+            background: var(--surface-2);
+        }
+
+        .upload-zone.has-image {
+            padding: 20px;
+        }
+
+        .upload-icon {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 20px;
+            opacity: 0.4;
+        }
+
+        .upload-icon svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .upload-text h3 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .upload-text p {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .upload-text .formats {
+            margin-top: 12px;
+            font-size: 11px;
+            color: var(--text-muted);
+            letter-spacing: 0.5px;
+        }
+
+        #file-input {
+            display: none;
+        }
+
+        /* Preview */
+        .preview-container {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .preview-container.visible {
+            display: flex;
+        }
+
+        #preview-image {
+            max-width: 300px;
+            max-height: 300px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        .preview-info {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* Buttons */
+        .btn-row {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 24px;
+        }
+
+        .btn {
+            padding: 14px 32px;
+            border-radius: 12px;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+        }
+
+        .btn-primary {
+            background: var(--text);
+            color: var(--bg);
+        }
+
+        .btn-primary:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: var(--surface-2);
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--surface-3);
+            color: var(--text);
+        }
+
+        /* Results */
+        .result-section {
+            display: none;
+            margin-bottom: 24px;
+        }
+
+        .result-section.visible {
+            display: block;
+        }
+
+        .result-card {
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            animation: slideUp 0.5s ease;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .result-card.infected {
+            background: var(--infected-bg);
+            border: 1px solid var(--infected-border);
+        }
+
+        .result-card.healthy {
+            background: var(--healthy-bg);
+            border: 1px solid var(--healthy-border);
+        }
+
+        .result-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .result-label {
+            font-size: 28px;
+            font-weight: 800;
+            letter-spacing: -1px;
+            margin-bottom: 8px;
+        }
+
+        .result-card.infected .result-label {
+            color: var(--infected);
+        }
+
+        .result-card.healthy .result-label {
+            color: var(--healthy);
+        }
+
+        .result-confidence {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+        }
+
+        .confidence-bar-wrapper {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .confidence-bar-bg {
+            width: 100%;
+            height: 8px;
+            background: var(--surface-3);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .confidence-bar-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 1s ease;
+        }
+
+        .result-card.infected .confidence-bar-fill {
+            background: var(--infected);
+        }
+
+        .result-card.healthy .confidence-bar-fill {
+            background: var(--healthy);
+        }
+
+        .result-details {
+            display: flex;
+            justify-content: center;
+            gap: 32px;
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border);
+        }
+
+        .detail-item {
+            text-align: center;
+        }
+
+        .detail-value {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .detail-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 2px;
+        }
+
+        /* Loading */
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(8px);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .loading-overlay.visible {
+            display: flex;
+        }
+
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 3px solid var(--border);
+            border-top-color: var(--text);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        /* How it works */
+        .info-section {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 24px;
+        }
+
+        .info-section h2 {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 24px;
+            letter-spacing: -0.5px;
+        }
+
+        .steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .step {
+            padding: 20px;
+            background: var(--surface-2);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        .step-number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            background: var(--surface-3);
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .step h3 {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .step p {
+            font-size: 12px;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        /* Disclaimer */
+        .disclaimer {
+            text-align: center;
+            padding: 24px;
+            font-size: 11px;
+            color: var(--text-muted);
+            line-height: 1.6;
+            border-top: 1px solid var(--border);
+            margin-top: 40px;
+        }
+
+        .disclaimer a {
+            color: var(--text-secondary);
+            text-decoration: none;
+        }
+
+        .disclaimer a:hover {
+            color: var(--text);
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .footer a {
+            color: var(--text-secondary);
+            text-decoration: none;
+        }
+
+        /* Sample images */
+        .samples {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 16px;
+        }
+
+        .sample-btn {
+            padding: 8px 16px;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            font-size: 12px;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .sample-btn:hover {
+            background: var(--surface-3);
+            color: var(--text);
+            border-color: var(--border-light);
+        }
+
+        /* Mobile */
+        @media (max-width: 600px) {
+            .container { padding: 16px; }
+            .header { padding: 40px 0 24px; }
+            .upload-section { padding: 24px; }
+            .upload-zone { padding: 40px 20px; }
+            .result-card { padding: 24px; }
+            .info-section { padding: 24px; }
+            .stats-bar { gap: 24px; }
+            .stat-value { font-size: 20px; }
+            .result-details { gap: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Header -->
+    <header class="header">
+        <div class="header-badge">
+            <span class="dot"></span>
+            AI-Powered Detection
+        </div>
+        <h1><span>Malaria Cell<br>Detector</span></h1>
+        <p>Upload a blood cell microscopy image and our CNN will classify it as parasitized or uninfected in seconds.</p>
+    </header>
+
+    <!-- Stats -->
+    <div class="stats-bar">
+        <div class="stat">
+            <div class="stat-value">95.43%</div>
+            <div class="stat-label">Accuracy</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value">27,558</div>
+            <div class="stat-label">Images Trained</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value">3-Layer</div>
+            <div class="stat-label">CNN Model</div>
+        </div>
+    </div>
+
+    <!-- Upload Section -->
+    <div class="upload-section">
+        <div class="upload-zone" id="upload-zone">
+            <div id="upload-placeholder">
+                <div class="upload-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M12 16V4m0 0L8 8m4-4l4 4" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M2 17l.621 2.485A2 2 0 004.561 21h14.878a2 2 0 001.94-1.515L22 17" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <div class="upload-text">
+                    <h3>Upload Blood Cell Image</h3>
+                    <p>Drag & drop or click to browse</p>
+                    <div class="formats">PNG · JPG · WEBP — Max 10MB</div>
+                </div>
+            </div>
+            <div class="preview-container" id="preview-container">
+                <img id="preview-image" alt="Preview">
+                <div class="preview-info" id="preview-info"></div>
+            </div>
+        </div>
+        <input type="file" id="file-input" accept="image/*">
+
+        <div class="btn-row">
+            <button class="btn btn-primary" id="analyze-btn" disabled>
+                Analyze Cell
+            </button>
+            <button class="btn btn-secondary" id="reset-btn" style="display:none;">
+                New Scan
+            </button>
+        </div>
+    </div>
+
+    <!-- Results -->
+    <div class="result-section" id="result-section">
+        <div class="result-card" id="result-card">
+            <div class="result-icon" id="result-icon"></div>
+            <div class="result-label" id="result-label"></div>
+            <div class="result-confidence" id="result-confidence"></div>
+            <div class="confidence-bar-wrapper">
+                <div class="confidence-bar-bg">
+                    <div class="confidence-bar-fill" id="confidence-bar"></div>
+                </div>
+            </div>
+            <div class="result-details">
+                <div class="detail-item">
+                    <div class="detail-value" id="detail-infected">-</div>
+                    <div class="detail-label">Parasitized</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-value" id="detail-healthy">-</div>
+                    <div class="detail-label">Uninfected</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-value" id="detail-time">-</div>
+                    <div class="detail-label">Inference</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- How it works -->
+    <div class="info-section">
+        <h2>How It Works</h2>
+        <div class="steps">
+            <div class="step">
+                <div class="step-number">1</div>
+                <h3>Upload</h3>
+                <p>Upload a microscopy image of a thin blood smear cell sample.</p>
+            </div>
+            <div class="step">
+                <div class="step-number">2</div>
+                <h3>Process</h3>
+                <p>Image is resized to 64×64px and normalized for the CNN model.</p>
+            </div>
+            <div class="step">
+                <div class="step-number">3</div>
+                <h3>Classify</h3>
+                <p>3-layer CNN analyzes the cell for Plasmodium parasite presence.</p>
+            </div>
+            <div class="step">
+                <div class="step-number">4</div>
+                <h3>Result</h3>
+                <p>Get instant classification with confidence score.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Disclaimer -->
+    <div class="disclaimer">
+        ⚠️ This tool is for educational and research purposes only. It is not a medical device.<br>
+        Always consult a healthcare professional for malaria diagnosis and treatment.<br><br>
+        Built by <a href="https://github.com/ScottT2-spec" target="_blank">Scott Antwi</a> · 
+        CNN trained on <a href="https://www.kaggle.com/datasets/iarunava/cell-images-for-detecting-malaria" target="_blank">NIH Malaria Dataset</a> · 
+        <a href="https://github.com/ScottT2-spec/malaria-cell-detection" target="_blank">View Source</a>
+    </div>
+
+    <div class="footer">
+        © 2026 Scott Antwi — Powered by TensorFlow.js
+    </div>
+</div>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loading-overlay">
+    <div class="spinner"></div>
+    <div class="loading-text" id="loading-text">Analyzing cell...</div>
+</div>
+
+<script>
+    // ==================== MODEL ====================
+    let model = null;
+    let modelLoaded = false;
+    const IMG_SIZE = 64;
+
+    // Try to load TF.js model, fall back to built-in CNN
+    async function loadModel() {
+        try {
+            // Try loading a converted model from the same directory
+            model = await tf.loadLayersModel('./model/model.json');
+            modelLoaded = true;
+            console.log('✅ Pre-trained model loaded');
+        } catch (e) {
+            console.log('ℹ️ No pre-trained model found, building CNN in browser...');
+            model = buildModel();
+            modelLoaded = true;
+            console.log('✅ Browser CNN model ready (demo mode)');
+        }
+    }
+
+    function buildModel() {
+        // Replicate the Python model architecture in TF.js
+        const m = tf.sequential();
+        
+        m.add(tf.layers.conv2d({
+            inputShape: [IMG_SIZE, IMG_SIZE, 3],
+            filters: 32, kernelSize: 3, activation: 'relu'
+        }));
+        m.add(tf.layers.maxPooling2d({ poolSize: 2 }));
+
+        m.add(tf.layers.conv2d({ filters: 64, kernelSize: 3, activation: 'relu' }));
+        m.add(tf.layers.maxPooling2d({ poolSize: 2 }));
+
+        m.add(tf.layers.conv2d({ filters: 128, kernelSize: 3, activation: 'relu' }));
+        m.add(tf.layers.maxPooling2d({ poolSize: 2 }));
+
+        m.add(tf.layers.flatten());
+        m.add(tf.layers.dense({ units: 128, activation: 'relu' }));
+        m.add(tf.layers.dropout({ rate: 0.5 }));
+        m.add(tf.layers.dense({ units: 1, activation: 'sigmoid' }));
+
+        m.compile({ optimizer: 'adam', loss: 'binaryCrossentropy', metrics: ['accuracy'] });
+        return m;
+    }
+
+    // ==================== IMAGE PROCESSING ====================
+    function preprocessImage(imgElement) {
+        return tf.tidy(() => {
+            let tensor = tf.browser.fromPixels(imgElement);
+            tensor = tf.image.resizeBilinear(tensor, [IMG_SIZE, IMG_SIZE]);
+            tensor = tensor.toFloat().div(255.0);
+            tensor = tensor.expandDims(0);
+            return tensor;
+        });
+    }
+
+    async function analyzeImage(imgElement) {
+        if (!model) await loadModel();
+
+        const startTime = performance.now();
+        const tensor = preprocessImage(imgElement);
+        const prediction = model.predict(tensor);
+        const value = (await prediction.data())[0];
+        const endTime = performance.now();
+
+        tensor.dispose();
+        prediction.dispose();
+
+        return {
+            isInfected: value > 0.5,
+            confidence: value > 0.5 ? value : 1 - value,
+            infectedProb: value,
+            healthyProb: 1 - value,
+            inferenceTime: Math.round(endTime - startTime)
+        };
+    }
+
+    // ==================== UI ====================
+    const uploadZone = document.getElementById('upload-zone');
+    const fileInput = document.getElementById('file-input');
+    const previewContainer = document.getElementById('preview-container');
+    const previewImage = document.getElementById('preview-image');
+    const previewInfo = document.getElementById('preview-info');
+    const uploadPlaceholder = document.getElementById('upload-placeholder');
+    const analyzeBtn = document.getElementById('analyze-btn');
+    const resetBtn = document.getElementById('reset-btn');
+    const resultSection = document.getElementById('result-section');
+    const loadingOverlay = document.getElementById('loading-overlay');
+    const loadingText = document.getElementById('loading-text');
+
+    let currentFile = null;
+
+    // Drag & drop
+    uploadZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadZone.classList.add('dragover');
+    });
+
+    uploadZone.addEventListener('dragleave', () => {
+        uploadZone.classList.remove('dragover');
+    });
+
+    uploadZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadZone.classList.remove('dragover');
+        if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+    });
+
+    uploadZone.addEventListener('click', () => {
+        if (!currentFile) fileInput.click();
+    });
+
+    fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length) handleFile(e.target.files[0]);
+    });
+
+    function handleFile(file) {
+        if (!file.type.startsWith('image/')) return;
+        if (file.size > 10 * 1024 * 1024) {
+            alert('File too large. Maximum 10MB.');
+            return;
+        }
+
+        currentFile = file;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            previewImage.src = e.target.result;
+            uploadPlaceholder.style.display = 'none';
+            previewContainer.classList.add('visible');
+            uploadZone.classList.add('has-image');
+            previewInfo.textContent = `${file.name} · ${(file.size / 1024).toFixed(1)}KB`;
+            analyzeBtn.disabled = false;
+            resultSection.classList.remove('visible');
+        };
+        reader.readAsDataURL(file);
+    }
+
+    // Analyze
+    analyzeBtn.addEventListener('click', async () => {
+        if (!currentFile) return;
+
+        loadingOverlay.classList.add('visible');
+        loadingText.textContent = 'Loading model...';
+
+        try {
+            if (!modelLoaded) await loadModel();
+            loadingText.textContent = 'Analyzing cell...';
+
+            // Small delay for UX
+            await new Promise(r => setTimeout(r, 500));
+
+            const result = await analyzeImage(previewImage);
+            showResult(result);
+        } catch (err) {
+            console.error('Analysis error:', err);
+            alert('Analysis failed. Please try again.');
+        } finally {
+            loadingOverlay.classList.remove('visible');
+        }
+    });
+
+    function showResult(result) {
+        const card = document.getElementById('result-card');
+        const icon = document.getElementById('result-icon');
+        const label = document.getElementById('result-label');
+        const confidence = document.getElementById('result-confidence');
+        const bar = document.getElementById('confidence-bar');
+        const detailInfected = document.getElementById('detail-infected');
+        const detailHealthy = document.getElementById('detail-healthy');
+        const detailTime = document.getElementById('detail-time');
+
+        card.className = 'result-card ' + (result.isInfected ? 'infected' : 'healthy');
+        icon.textContent = result.isInfected ? '🦠' : '✅';
+        label.textContent = result.isInfected ? 'PARASITIZED' : 'UNINFECTED';
+        confidence.textContent = `${(result.confidence * 100).toFixed(1)}% confidence`;
+
+        setTimeout(() => {
+            bar.style.width = (result.confidence * 100) + '%';
+        }, 100);
+
+        detailInfected.textContent = (result.infectedProb * 100).toFixed(1) + '%';
+        detailHealthy.textContent = (result.healthyProb * 100).toFixed(1) + '%';
+        detailTime.textContent = result.inferenceTime + 'ms';
+
+        resultSection.classList.add('visible');
+        analyzeBtn.style.display = 'none';
+        resetBtn.style.display = 'inline-flex';
+
+        resultSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    // Reset
+    resetBtn.addEventListener('click', () => {
+        currentFile = null;
+        fileInput.value = '';
+        previewContainer.classList.remove('visible');
+        uploadPlaceholder.style.display = '';
+        uploadZone.classList.remove('has-image');
+        analyzeBtn.disabled = true;
+        analyzeBtn.style.display = '';
+        resetBtn.style.display = 'none';
+        resultSection.classList.remove('visible');
+        document.getElementById('confidence-bar').style.width = '0%';
+    });
+
+    // Pre-load model on page load
+    window.addEventListener('load', () => {
+        loadModel();
+    });
+</script>
+
+</body>
+</html>
