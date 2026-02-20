@@ -52,6 +52,38 @@
             z-index: 1;
         }
 
+        /* Typewriter Banner */
+        .typewriter-banner {
+            text-align: center;
+            padding: 14px 20px;
+            background: linear-gradient(135deg, #6B21A8, #7C3AED, #9333EA);
+            border-radius: 12px;
+            margin-bottom: 0;
+            min-height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .typewriter-text {
+            font-family: 'Inter', monospace;
+            font-size: 14px;
+            font-weight: 600;
+            color: #ffffff;
+            letter-spacing: 0.3px;
+        }
+
+        .typewriter-cursor {
+            font-weight: 300;
+            color: rgba(255,255,255,0.8);
+            animation: blink 0.7s step-end infinite;
+            margin-left: 1px;
+        }
+
+        @keyframes blink {
+            50% { opacity: 0; }
+        }
+
         /* Header */
         .header { text-align: center; padding: 60px 0 40px; }
 
@@ -530,6 +562,11 @@
 <body>
 
 <div class="container">
+    <!-- Typewriter Banner -->
+    <div class="typewriter-banner">
+        <span class="typewriter-text" id="typewriter-text"></span><span class="typewriter-cursor">|</span>
+    </div>
+
     <!-- Header -->
     <header class="header">
         <div class="header-badge">
@@ -1723,10 +1760,55 @@
         }).catch(err => console.warn('SW registration failed:', err));
     }
 
+    // ===== TYPEWRITER =====
+    const typewriterPhrases = [
+        "Built by Scott Antwi 🇬🇭",
+        "95.43% Accuracy on 27,558 Blood Cell Images",
+        "Powered by TensorFlow.js & Deep Learning",
+        "Explainable AI with Grad-CAM Heatmaps",
+        "Works Offline — Built for Rural Clinics",
+        "3-Layer CNN Trained on NIH Malaria Dataset",
+        "From Ghana to the World 🌍",
+        "Open Source — View on GitHub",
+        "Screening Tool for Plasmodium Detection",
+        "AI for Healthcare in Africa 🧬",
+    ];
+
+    let twPhraseIdx = 0;
+    let twCharIdx = 0;
+    let twDeleting = false;
+    const twElement = document.getElementById('typewriter-text');
+
+    function typewriterTick() {
+        const phrase = typewriterPhrases[twPhraseIdx];
+
+        if (!twDeleting) {
+            twElement.textContent = phrase.substring(0, twCharIdx + 1);
+            twCharIdx++;
+            if (twCharIdx >= phrase.length) {
+                setTimeout(() => { twDeleting = true; typewriterTick(); }, 2000);
+                return;
+            }
+            setTimeout(typewriterTick, 60);
+        } else {
+            twElement.textContent = phrase.substring(0, twCharIdx);
+            twCharIdx--;
+            if (twCharIdx < 0) {
+                twDeleting = false;
+                twCharIdx = 0;
+                twPhraseIdx = (twPhraseIdx + 1) % typewriterPhrases.length;
+                setTimeout(typewriterTick, 400);
+                return;
+            }
+            setTimeout(typewriterTick, 30);
+        }
+    }
+
     // ===== INIT =====
     window.addEventListener('load', () => {
         loadModel();
         updateDashboard();
+        typewriterTick();
     });
 </script>
 
