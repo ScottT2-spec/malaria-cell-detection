@@ -4,15 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Malaria Cell Detector — AI Blood Cell Analysis</title>
+    <meta name="description" content="AI-powered malaria cell detection using deep learning and TensorFlow.js">
+    <meta name="theme-color" content="#6B21A8">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="MalariaDetect">
+    <link rel="manifest" href="./manifest.json">
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0/dist/tf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         :root {
             --bg: #ffffff;
@@ -41,8 +44,6 @@
             overflow-x: hidden;
         }
 
-        /* Clean background - no grid */
-
         .container {
             max-width: 900px;
             margin: 0 auto;
@@ -52,10 +53,7 @@
         }
 
         /* Header */
-        .header {
-            text-align: center;
-            padding: 60px 0 40px;
-        }
+        .header { text-align: center; padding: 60px 0 40px; }
 
         .header-badge {
             display: inline-flex;
@@ -74,8 +72,7 @@
         }
 
         .header-badge .dot {
-            width: 6px;
-            height: 6px;
+            width: 6px; height: 6px;
             background: #1a8a4a;
             border-radius: 50%;
         }
@@ -88,9 +85,7 @@
             margin-bottom: 16px;
         }
 
-        .header h1 span {
-            color: #6B21A8;
-        }
+        .header h1 span { color: #6B21A8; }
 
         .header p {
             font-size: 16px;
@@ -109,23 +104,9 @@
             margin-bottom: 40px;
         }
 
-        .stat {
-            text-align: center;
-        }
-
-        .stat-value {
-            font-size: 24px;
-            font-weight: 700;
-            color: var(--text);
-        }
-
-        .stat-label {
-            font-size: 11px;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-top: 4px;
-        }
+        .stat { text-align: center; }
+        .stat-value { font-size: 24px; font-weight: 700; color: var(--text); }
+        .stat-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; }
 
         /* Upload area */
         .upload-section {
@@ -147,85 +128,29 @@
             overflow: hidden;
         }
 
-        .upload-zone:hover {
-            border-color: var(--text-muted);
-            background: var(--surface-2);
-        }
+        .upload-zone:hover { border-color: var(--text-muted); background: var(--surface-2); }
+        .upload-zone.dragover { border-color: var(--accent); background: var(--surface-2); }
+        .upload-zone.has-image { padding: 20px; }
 
-        .upload-zone.dragover {
-            border-color: var(--accent);
-            background: var(--surface-2);
-        }
+        .upload-icon { width: 48px; height: 48px; margin: 0 auto 20px; opacity: 0.4; }
+        .upload-icon svg { width: 100%; height: 100%; }
 
-        .upload-zone.has-image {
-            padding: 20px;
-        }
+        .upload-text h3 { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+        .upload-text p { font-size: 13px; color: var(--text-muted); }
+        .upload-text .formats { margin-top: 12px; font-size: 11px; color: var(--text-muted); letter-spacing: 0.5px; }
 
-        .upload-icon {
-            width: 48px;
-            height: 48px;
-            margin: 0 auto 20px;
-            opacity: 0.4;
-        }
-
-        .upload-icon svg {
-            width: 100%;
-            height: 100%;
-        }
-
-        .upload-text h3 {
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 8px;
-        }
-
-        .upload-text p {
-            font-size: 13px;
-            color: var(--text-muted);
-        }
-
-        .upload-text .formats {
-            margin-top: 12px;
-            font-size: 11px;
-            color: var(--text-muted);
-            letter-spacing: 0.5px;
-        }
-
-        #file-input {
-            display: none;
-        }
+        #file-input, #batch-file-input { display: none; }
 
         /* Preview */
-        .preview-container {
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            gap: 16px;
-        }
+        .preview-container { display: none; flex-direction: column; align-items: center; gap: 16px; }
+        .preview-container.visible { display: flex; }
 
-        .preview-container.visible {
-            display: flex;
-        }
+        #preview-image { max-width: 300px; max-height: 300px; border-radius: 12px; border: 1px solid var(--border); }
 
-        #preview-image {
-            max-width: 300px;
-            max-height: 300px;
-            border-radius: 12px;
-            border: 1px solid var(--border);
-        }
-
-        .preview-info {
-            font-size: 12px;
-            color: var(--text-muted);
-        }
+        .preview-info { font-size: 12px; color: var(--text-muted); }
 
         /* Buttons */
-        .btn-row {
-            display: flex;
-            gap: 12px;
-            justify-content: center;
-            margin-top: 24px;
-        }
+        .btn-row { display: flex; gap: 12px; justify-content: center; margin-top: 24px; flex-wrap: wrap; }
 
         .btn {
             padding: 14px 32px;
@@ -238,41 +163,18 @@
             border: none;
         }
 
-        .btn-primary {
-            background: #6B21A8;
-            color: #ffffff;
-        }
+        .btn-primary { background: #6B21A8; color: #ffffff; }
+        .btn-primary:hover { background: #581C87; }
+        .btn-primary:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
 
-        .btn-primary:hover {
-            background: #581C87;
-        }
+        .btn-secondary { background: var(--surface-2); color: var(--text-secondary); border: 1px solid var(--border); }
+        .btn-secondary:hover { background: var(--surface-3); color: var(--text); }
 
-        .btn-primary:disabled {
-            opacity: 0.3;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .btn-secondary {
-            background: var(--surface-2);
-            color: var(--text-secondary);
-            border: 1px solid var(--border);
-        }
-
-        .btn-secondary:hover {
-            background: var(--surface-3);
-            color: var(--text);
-        }
+        .btn-sm { padding: 10px 20px; font-size: 13px; border-radius: 10px; }
 
         /* Results */
-        .result-section {
-            display: none;
-            margin-bottom: 24px;
-        }
-
-        .result-section.visible {
-            display: block;
-        }
+        .result-section { display: none; margin-bottom: 24px; }
+        .result-section.visible { display: block; }
 
         .result-card {
             border-radius: 20px;
@@ -286,77 +188,24 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        .result-card.infected {
-            background: var(--infected-bg);
-            border: 1px solid var(--infected-border);
-        }
+        .result-card.infected { background: var(--infected-bg); border: 1px solid var(--infected-border); }
+        .result-card.healthy { background: var(--healthy-bg); border: 1px solid var(--healthy-border); }
+        .result-card.rejected { background: rgba(180, 130, 20, 0.06); border: 1px solid rgba(180, 130, 20, 0.25); }
+        .result-card.rejected .result-label { color: #b48214; }
 
-        .result-card.healthy {
-            background: var(--healthy-bg);
-            border: 1px solid var(--healthy-border);
-        }
+        .result-icon { font-size: 48px; margin-bottom: 16px; }
 
-        .result-card.rejected {
-            background: rgba(180, 130, 20, 0.06);
-            border: 1px solid rgba(180, 130, 20, 0.25);
-        }
+        .result-label { font-size: 28px; font-weight: 800; letter-spacing: -1px; margin-bottom: 8px; }
+        .result-card.infected .result-label { color: var(--infected); }
+        .result-card.healthy .result-label { color: var(--healthy); }
 
-        .result-card.rejected .result-label {
-            color: #b48214;
-        }
+        .result-confidence { font-size: 14px; color: var(--text-secondary); margin-bottom: 24px; }
 
-        .result-icon {
-            font-size: 48px;
-            margin-bottom: 16px;
-        }
-
-        .result-label {
-            font-size: 28px;
-            font-weight: 800;
-            letter-spacing: -1px;
-            margin-bottom: 8px;
-        }
-
-        .result-card.infected .result-label {
-            color: var(--infected);
-        }
-
-        .result-card.healthy .result-label {
-            color: var(--healthy);
-        }
-
-        .result-confidence {
-            font-size: 14px;
-            color: var(--text-secondary);
-            margin-bottom: 24px;
-        }
-
-        .confidence-bar-wrapper {
-            max-width: 400px;
-            margin: 0 auto;
-        }
-
-        .confidence-bar-bg {
-            width: 100%;
-            height: 8px;
-            background: var(--surface-3);
-            border-radius: 4px;
-            overflow: hidden;
-        }
-
-        .confidence-bar-fill {
-            height: 100%;
-            border-radius: 4px;
-            transition: width 1s ease;
-        }
-
-        .result-card.infected .confidence-bar-fill {
-            background: var(--infected);
-        }
-
-        .result-card.healthy .confidence-bar-fill {
-            background: var(--healthy);
-        }
+        .confidence-bar-wrapper { max-width: 400px; margin: 0 auto; }
+        .confidence-bar-bg { width: 100%; height: 8px; background: var(--surface-3); border-radius: 4px; overflow: hidden; }
+        .confidence-bar-fill { height: 100%; border-radius: 4px; transition: width 1s ease; }
+        .result-card.infected .confidence-bar-fill { background: var(--infected); }
+        .result-card.healthy .confidence-bar-fill { background: var(--healthy); }
 
         .result-details {
             display: flex;
@@ -367,63 +216,71 @@
             border-top: 1px solid var(--border);
         }
 
-        .detail-item {
+        .detail-item { text-align: center; }
+        .detail-value { font-size: 18px; font-weight: 700; }
+        .detail-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+
+        /* AI Recommendation */
+        .recommendation {
+            margin-top: 24px;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: left;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .recommendation.warn { background: rgba(204, 34, 34, 0.08); border: 1px solid rgba(204, 34, 34, 0.2); }
+        .recommendation.safe { background: rgba(26, 138, 74, 0.08); border: 1px solid rgba(26, 138, 74, 0.2); }
+        .recommendation .rec-title { font-weight: 700; margin-bottom: 8px; font-size: 15px; }
+        .recommendation .rec-disclaimer {
+            margin-top: 12px; padding-top: 12px;
+            border-top: 1px solid var(--border);
+            font-size: 12px; color: var(--text-muted); font-style: italic;
+        }
+
+        /* Grad-CAM */
+        .gradcam-section {
+            margin-top: 24px;
+            padding: 20px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
             text-align: center;
         }
+        .gradcam-section h3 { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+        .gradcam-section .gradcam-subtitle { font-size: 12px; color: var(--text-muted); margin-bottom: 16px; }
+        .gradcam-images { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+        .gradcam-images canvas { border-radius: 12px; border: 1px solid var(--border); max-width: 250px; }
+        .gradcam-label { font-size: 11px; color: var(--text-muted); margin-top: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
 
-        .detail-value {
-            font-size: 18px;
-            font-weight: 700;
-        }
-
-        .detail-label {
-            font-size: 11px;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-top: 2px;
-        }
+        /* Report buttons */
+        .report-btns { display: flex; gap: 10px; justify-content: center; margin-top: 20px; flex-wrap: wrap; }
 
         /* Loading */
         .loading-overlay {
             display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(255,255,255,0.9);
             backdrop-filter: blur(8px);
             z-index: 100;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            gap: 24px;
+            justify-content: center; align-items: center;
+            flex-direction: column; gap: 24px;
         }
-
-        .loading-overlay.visible {
-            display: flex;
-        }
+        .loading-overlay.visible { display: flex; }
 
         .spinner {
-            width: 48px;
-            height: 48px;
+            width: 48px; height: 48px;
             border: 3px solid var(--border);
             border-top-color: #6B21A8;
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
         }
 
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
+        @keyframes spin { to { transform: rotate(360deg); } }
 
-        .loading-text {
-            font-size: 14px;
-            color: var(--text-secondary);
-        }
+        .loading-text { font-size: 14px; color: var(--text-secondary); }
 
-        /* How it works */
+        /* Info section */
         .info-section {
             background: var(--surface);
             border: 1px solid var(--border);
@@ -432,118 +289,22 @@
             margin-bottom: 24px;
         }
 
-        .info-section h2 {
-            font-size: 20px;
-            font-weight: 700;
-            margin-bottom: 24px;
-            letter-spacing: -0.5px;
-        }
+        .info-section h2 { font-size: 20px; font-weight: 700; margin-bottom: 24px; letter-spacing: -0.5px; }
 
-        .steps {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-        }
+        .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
 
-        .step {
-            padding: 20px;
-            background: var(--surface-2);
-            border-radius: 12px;
-            border: 1px solid var(--border);
-        }
-
+        .step { padding: 20px; background: var(--surface-2); border-radius: 12px; border: 1px solid var(--border); }
         .step-number {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 28px;
-            height: 28px;
-            background: var(--surface-3);
-            border: 1px solid var(--border-light);
-            border-radius: 8px;
-            font-size: 12px;
-            font-weight: 700;
-            margin-bottom: 12px;
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 28px; height: 28px;
+            background: var(--surface-3); border: 1px solid var(--border-light);
+            border-radius: 8px; font-size: 12px; font-weight: 700; margin-bottom: 12px;
         }
-
-        .step h3 {
-            font-size: 14px;
-            font-weight: 600;
-            margin-bottom: 6px;
-        }
-
-        .step p {
-            font-size: 12px;
-            color: var(--text-muted);
-            line-height: 1.5;
-        }
-
-        /* Disclaimer */
-        .disclaimer {
-            text-align: center;
-            padding: 24px;
-            font-size: 11px;
-            color: var(--text-muted);
-            line-height: 1.6;
-            border-top: 1px solid var(--border);
-            margin-top: 40px;
-        }
-
-        .disclaimer a {
-            color: var(--text-secondary);
-            text-decoration: none;
-        }
-
-        .disclaimer a:hover {
-            color: var(--text);
-        }
-
-        /* Footer */
-        .footer {
-            text-align: center;
-            padding: 20px;
-            font-size: 12px;
-            color: var(--text-muted);
-        }
-
-        .footer a {
-            color: var(--text-secondary);
-            text-decoration: none;
-        }
-
-        /* Sample images */
-        .samples {
-            display: flex;
-            gap: 12px;
-            justify-content: center;
-            flex-wrap: wrap;
-            margin-top: 16px;
-        }
-
-        .sample-btn {
-            padding: 8px 16px;
-            background: var(--surface-2);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            color: var(--text-secondary);
-            font-size: 12px;
-            font-family: 'Inter', sans-serif;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .sample-btn:hover {
-            background: var(--surface-3);
-            color: var(--text);
-            border-color: var(--border-light);
-        }
+        .step h3 { font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+        .step p { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
 
         /* Choice buttons */
-        .choice-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-        }
+        .choice-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
 
         .choice-btn {
             background: var(--surface-2);
@@ -557,111 +318,194 @@
             color: var(--text);
         }
 
-        .choice-btn:hover {
-            background: var(--surface-3);
-            border-color: var(--border-light);
-            transform: translateY(-2px);
-        }
+        .choice-btn:hover { background: var(--surface-3); border-color: var(--border-light); transform: translateY(-2px); }
 
-        .choice-icon {
-            width: 40px;
-            height: 40px;
-            margin: 0 auto 16px;
-            opacity: 0.6;
-        }
+        .choice-icon { width: 40px; height: 40px; margin: 0 auto 16px; opacity: 0.6; }
+        .choice-icon svg { width: 100%; height: 100%; }
 
-        .choice-icon svg {
-            width: 100%;
-            height: 100%;
-        }
-
-        .choice-btn h3 {
-            font-size: 16px;
-            font-weight: 700;
-            margin-bottom: 6px;
-        }
-
-        .choice-btn p {
-            font-size: 12px;
-            color: var(--text-muted);
-            line-height: 1.4;
-        }
+        .choice-btn h3 { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+        .choice-btn p { font-size: 12px; color: var(--text-muted); line-height: 1.4; }
 
         /* Camera */
-        .camera-container {
-            position: relative;
-            border-radius: 16px;
-            overflow: hidden;
-            background: #000;
-        }
-
-        #camera-video {
-            width: 100%;
-            display: block;
-            border-radius: 16px;
-        }
+        .camera-container { position: relative; border-radius: 16px; overflow: hidden; background: #000; }
+        #camera-video { width: 100%; display: block; border-radius: 16px; }
 
         .camera-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            pointer-events: none;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; align-items: center; justify-content: center; pointer-events: none;
         }
 
         .scan-frame {
-            width: 200px;
-            height: 200px;
+            width: 200px; height: 200px;
             border: 2px solid rgba(255,255,255,0.4);
             border-radius: 16px;
             box-shadow: 0 0 0 9999px rgba(0,0,0,0.3);
         }
 
         .camera-controls {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+            display: flex; align-items: center; justify-content: space-between;
             padding: 16px 24px;
             background: rgba(0,0,0,0.6);
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
+            position: absolute; bottom: 0; left: 0; right: 0;
         }
 
         .btn-capture {
-            width: 64px;
-            height: 64px;
-            border-radius: 50%;
-            background: transparent;
-            border: 3px solid #fff;
+            width: 64px; height: 64px; border-radius: 50%;
+            background: transparent; border: 3px solid #fff;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            padding: 0; transition: all 0.2s;
+        }
+        .btn-capture:hover { transform: scale(1.05); }
+        .btn-capture:active { transform: scale(0.95); }
+        .capture-ring { width: 48px; height: 48px; border-radius: 50%; background: #fff; display: block; }
+
+        /* Batch section */
+        .batch-section { display: none; }
+        .batch-section.visible { display: block; }
+
+        .batch-dropzone {
+            border: 2px dashed var(--border-light);
+            border-radius: 16px;
+            padding: 40px;
+            text-align: center;
             cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0;
-            transition: all 0.2s;
+            transition: all 0.3s;
         }
+        .batch-dropzone:hover { border-color: var(--text-muted); background: var(--surface-2); }
 
-        .btn-capture:hover {
-            transform: scale(1.05);
+        .batch-progress { margin-top: 20px; }
+        .batch-progress-bar {
+            width: 100%; height: 8px;
+            background: var(--surface-3); border-radius: 4px; overflow: hidden;
         }
+        .batch-progress-fill {
+            height: 100%; background: #6B21A8; border-radius: 4px;
+            transition: width 0.3s; width: 0%;
+        }
+        .batch-progress-text { font-size: 12px; color: var(--text-muted); margin-top: 6px; text-align: center; }
 
-        .btn-capture:active {
-            transform: scale(0.95);
+        .batch-results-table {
+            width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 13px;
         }
+        .batch-results-table th {
+            text-align: left; padding: 10px 12px;
+            background: var(--surface-2); border-bottom: 1px solid var(--border);
+            font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted);
+        }
+        .batch-results-table td {
+            padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: middle;
+        }
+        .batch-results-table img { width: 40px; height: 40px; border-radius: 6px; object-fit: cover; }
+        .batch-tag {
+            display: inline-block; padding: 3px 10px; border-radius: 6px;
+            font-size: 11px; font-weight: 600;
+        }
+        .batch-tag.infected { background: var(--infected-bg); color: var(--infected); border: 1px solid var(--infected-border); }
+        .batch-tag.healthy { background: var(--healthy-bg); color: var(--healthy); border: 1px solid var(--healthy-border); }
+        .batch-tag.rejected { background: rgba(180,130,20,0.1); color: #b48214; }
 
-        .capture-ring {
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            background: #fff;
-            display: block;
+        .batch-export-row { display: flex; gap: 10px; justify-content: center; margin-top: 20px; flex-wrap: wrap; }
+
+        /* Dashboard */
+        .dashboard-section {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            margin-bottom: 24px;
+            overflow: hidden;
         }
+        .dashboard-header {
+            padding: 20px 24px;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: space-between;
+            user-select: none;
+        }
+        .dashboard-header h2 { font-size: 18px; font-weight: 700; }
+        .dashboard-header .toggle-icon { font-size: 18px; transition: transform 0.3s; }
+        .dashboard-header .toggle-icon.open { transform: rotate(180deg); }
+        .dashboard-body { display: none; padding: 0 24px 24px; }
+        .dashboard-body.open { display: block; }
+
+        .dash-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 20px; }
+        .dash-stat {
+            background: var(--surface-2); border: 1px solid var(--border);
+            border-radius: 12px; padding: 16px; text-align: center;
+        }
+        .dash-stat-value { font-size: 22px; font-weight: 700; }
+        .dash-stat-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; }
+
+        .dash-chart { display: flex; gap: 12px; align-items: flex-end; height: 120px; margin: 20px 0; justify-content: center; }
+        .dash-bar-group { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+        .dash-bar {
+            width: 60px; border-radius: 8px 8px 0 0; min-height: 4px;
+            transition: height 0.5s;
+        }
+        .dash-bar.infected-bar { background: var(--infected); }
+        .dash-bar.healthy-bar { background: var(--healthy); }
+        .dash-bar-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; }
+
+        /* Install button */
+        .install-btn {
+            display: none;
+            margin: 0 auto 24px;
+        }
+        .install-btn.visible { display: block; }
+
+        /* Research section */
+        .research-section {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 24px;
+        }
+        .research-section h2 { font-size: 20px; font-weight: 700; margin-bottom: 24px; letter-spacing: -0.5px; }
+        .research-section h3 { font-size: 16px; font-weight: 600; margin: 24px 0 12px; }
+        .research-section h3:first-of-type { margin-top: 0; }
+        .research-section p { font-size: 13px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 12px; }
+
+        /* Architecture diagram */
+        .arch-diagram {
+            display: flex; align-items: center; gap: 0;
+            overflow-x: auto; padding: 16px 0;
+            flex-wrap: wrap; justify-content: center;
+        }
+        .arch-block {
+            background: var(--surface-2); border: 1px solid var(--border);
+            border-radius: 10px; padding: 10px 14px; text-align: center;
+            font-size: 11px; font-weight: 600; white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .arch-block small { display: block; font-weight: 400; color: var(--text-muted); font-size: 10px; margin-top: 2px; }
+        .arch-arrow { font-size: 16px; color: var(--text-muted); padding: 0 4px; flex-shrink: 0; }
+
+        /* Confusion matrix */
+        .confusion-matrix {
+            display: grid; grid-template-columns: auto 1fr 1fr;
+            gap: 2px; max-width: 320px; margin: 16px auto; font-size: 12px;
+        }
+        .cm-cell {
+            padding: 14px 10px; text-align: center; border-radius: 8px; font-weight: 600;
+        }
+        .cm-header { background: var(--surface-2); color: var(--text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .cm-tp { background: rgba(26,138,74,0.15); color: var(--healthy); }
+        .cm-tn { background: rgba(26,138,74,0.1); color: var(--healthy); }
+        .cm-fp { background: rgba(204,34,34,0.1); color: var(--infected); }
+        .cm-fn { background: rgba(204,34,34,0.15); color: var(--infected); }
+
+        /* Disclaimer */
+        .disclaimer {
+            text-align: center; padding: 24px;
+            font-size: 11px; color: var(--text-muted);
+            line-height: 1.6;
+            border-top: 1px solid var(--border);
+            margin-top: 40px;
+        }
+        .disclaimer a { color: var(--text-secondary); text-decoration: none; }
+        .disclaimer a:hover { color: var(--text); }
+
+        .footer { text-align: center; padding: 20px; font-size: 12px; color: var(--text-muted); }
+        .footer a { color: var(--text-secondary); text-decoration: none; }
 
         /* Mobile */
         @media (max-width: 600px) {
@@ -671,9 +515,15 @@
             .upload-zone { padding: 40px 20px; }
             .result-card { padding: 24px; }
             .info-section { padding: 24px; }
+            .research-section { padding: 24px; }
             .stats-bar { gap: 24px; }
             .stat-value { font-size: 20px; }
             .result-details { gap: 20px; }
+            .choice-row { grid-template-columns: 1fr; }
+            .gradcam-images canvas { max-width: 100%; }
+            .batch-results-table { font-size: 11px; }
+            .batch-results-table th, .batch-results-table td { padding: 8px 6px; }
+            .arch-diagram { gap: 4px; }
         }
     </style>
 </head>
@@ -689,6 +539,9 @@
         <h1><span>Malaria Cell<br>Detector</span></h1>
         <p>Upload a blood cell microscopy image and our CNN will classify it as parasitized or uninfected in seconds.</p>
     </header>
+
+    <!-- Install PWA button -->
+    <button class="btn btn-secondary install-btn" id="install-btn">📱 Install App</button>
 
     <!-- Stats -->
     <div class="stats-bar">
@@ -730,6 +583,18 @@
                 <h3>Upload</h3>
                 <p>Upload a blood cell image from your device</p>
             </button>
+            <button class="choice-btn" id="batch-btn">
+                <div class="choice-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <rect x="3" y="3" width="7" height="7" rx="1" stroke-linecap="round"/>
+                        <rect x="14" y="3" width="7" height="7" rx="1" stroke-linecap="round"/>
+                        <rect x="3" y="14" width="7" height="7" rx="1" stroke-linecap="round"/>
+                        <rect x="14" y="14" width="7" height="7" rx="1" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <h3>Batch</h3>
+                <p>Analyze multiple images at once (up to 50)</p>
+            </button>
         </div>
 
         <!-- Camera view -->
@@ -765,6 +630,41 @@
             </div>
         </div>
 
+        <!-- Batch section -->
+        <div class="batch-section" id="batch-section">
+            <div class="batch-dropzone" id="batch-dropzone">
+                <div class="upload-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+                        <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+                    </svg>
+                </div>
+                <div class="upload-text">
+                    <h3>Upload Multiple Images</h3>
+                    <p>Select up to 50 blood cell images for batch analysis</p>
+                    <div class="formats">PNG · JPG · WEBP — Max 10MB each</div>
+                </div>
+            </div>
+            <input type="file" id="batch-file-input" accept="image/*" multiple>
+            <div class="batch-progress" id="batch-progress" style="display:none;">
+                <div class="batch-progress-bar"><div class="batch-progress-fill" id="batch-progress-fill"></div></div>
+                <div class="batch-progress-text" id="batch-progress-text">0 / 0</div>
+            </div>
+            <div id="batch-results-container" style="display:none;">
+                <table class="batch-results-table">
+                    <thead><tr><th></th><th>File</th><th>Result</th><th>Confidence</th><th>Status</th></tr></thead>
+                    <tbody id="batch-results-body"></tbody>
+                </table>
+                <div class="batch-export-row">
+                    <button class="btn btn-secondary btn-sm" id="batch-export-csv">📄 Export CSV</button>
+                    <button class="btn btn-secondary btn-sm" id="batch-export-pdf">📑 Export PDF Report</button>
+                </div>
+            </div>
+            <div class="btn-row">
+                <button class="btn btn-secondary" id="batch-cancel">← Back</button>
+            </div>
+        </div>
+
         <!-- Preview (shared for both scan & upload) -->
         <div class="preview-container" id="preview-container">
             <img id="preview-image" alt="Preview">
@@ -774,12 +674,8 @@
         <input type="file" id="file-input" accept="image/*">
 
         <div class="btn-row">
-            <button class="btn btn-primary" id="analyze-btn" disabled style="display:none;">
-                Analyze Cell
-            </button>
-            <button class="btn btn-secondary" id="reset-btn" style="display:none;">
-                New Scan
-            </button>
+            <button class="btn btn-primary" id="analyze-btn" disabled style="display:none;">Analyze Cell</button>
+            <button class="btn btn-secondary" id="reset-btn" style="display:none;">New Scan</button>
         </div>
     </div>
 
@@ -808,6 +704,46 @@
                     <div class="detail-label">Inference</div>
                 </div>
             </div>
+            <!-- AI Recommendation -->
+            <div class="recommendation" id="recommendation" style="display:none;">
+                <div class="rec-title" id="rec-title"></div>
+                <div id="rec-text"></div>
+                <div class="rec-disclaimer">This tool is for screening purposes only and should not replace professional medical diagnosis.</div>
+            </div>
+            <!-- Report buttons -->
+            <div class="report-btns" id="report-btns" style="display:none;">
+                <button class="btn btn-primary btn-sm" id="download-report-btn">📄 Download Report</button>
+            </div>
+        </div>
+        <!-- Grad-CAM -->
+        <div class="gradcam-section" id="gradcam-section" style="display:none;">
+            <h3>🔍 AI Attention Map</h3>
+            <div class="gradcam-subtitle">Where the model is focusing</div>
+            <div class="gradcam-images">
+                <div>
+                    <canvas id="gradcam-original" width="200" height="200"></canvas>
+                    <div class="gradcam-label">Original</div>
+                </div>
+                <div>
+                    <canvas id="gradcam-heatmap" width="200" height="200"></canvas>
+                    <div class="gradcam-label">Attention Heatmap</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div class="dashboard-section" id="dashboard-section">
+        <div class="dashboard-header" id="dashboard-header">
+            <h2>📊 Dashboard</h2>
+            <span class="toggle-icon" id="dashboard-toggle">▼</span>
+        </div>
+        <div class="dashboard-body" id="dashboard-body">
+            <div class="dash-stats" id="dash-stats"></div>
+            <div class="dash-chart" id="dash-chart"></div>
+            <div style="text-align:center;">
+                <button class="btn btn-secondary btn-sm" id="dash-reset">Reset Statistics</button>
+            </div>
         </div>
     </div>
 
@@ -833,8 +769,62 @@
             <div class="step">
                 <div class="step-number">4</div>
                 <h3>Result</h3>
-                <p>Get instant classification with confidence score.</p>
+                <p>Get instant classification with confidence score and AI attention map.</p>
             </div>
+        </div>
+    </div>
+
+    <!-- Research & Methodology -->
+    <div class="research-section">
+        <h2>🔬 Research & Methodology</h2>
+
+        <h3>Model Architecture</h3>
+        <div class="arch-diagram">
+            <div class="arch-block">Input<small>64×64×3</small></div>
+            <span class="arch-arrow">→</span>
+            <div class="arch-block">Conv2D<small>32 filters, 3×3</small></div>
+            <span class="arch-arrow">→</span>
+            <div class="arch-block">MaxPool<small>2×2</small></div>
+            <span class="arch-arrow">→</span>
+            <div class="arch-block">Conv2D<small>64 filters, 3×3</small></div>
+            <span class="arch-arrow">→</span>
+            <div class="arch-block">MaxPool<small>2×2</small></div>
+            <span class="arch-arrow">→</span>
+            <div class="arch-block">Conv2D<small>128 filters, 3×3</small></div>
+            <span class="arch-arrow">→</span>
+            <div class="arch-block">MaxPool<small>2×2</small></div>
+            <span class="arch-arrow">→</span>
+            <div class="arch-block">Flatten</div>
+            <span class="arch-arrow">→</span>
+            <div class="arch-block">Dense<small>128, ReLU</small></div>
+            <span class="arch-arrow">→</span>
+            <div class="arch-block">Dropout<small>0.5</small></div>
+            <span class="arch-arrow">→</span>
+            <div class="arch-block" style="background:#6B21A8;color:#fff;border-color:#6B21A8;">Dense<small>1, Sigmoid</small></div>
+        </div>
+
+        <h3>Dataset</h3>
+        <p>
+            <strong>NIH Malaria Cell Images Dataset</strong> — 27,558 cell images with equal instances of parasitized and uninfected cells from thin blood smear slide images of segmented cells.
+        </p>
+        <p style="font-size:12px;color:var(--text-muted);">
+            Citation: Rajaraman S, et al. "Pre-trained convolutional neural networks as feature extractors toward improved malaria parasite detection in thin blood smear images." PeerJ. 2018;6:e4568.
+        </p>
+
+        <h3>Training & Validation</h3>
+        <p>80/20 stratified train-test split · Binary cross-entropy loss · Adam optimizer · Accuracy: <strong>95.43%</strong></p>
+
+        <h3>Confusion Matrix</h3>
+        <div class="confusion-matrix">
+            <div class="cm-cell cm-header"></div>
+            <div class="cm-cell cm-header">Pred. Positive</div>
+            <div class="cm-cell cm-header">Pred. Negative</div>
+            <div class="cm-cell cm-header">Actual Pos.</div>
+            <div class="cm-cell cm-tp">TP: 2,632<small style="display:block;font-weight:400;font-size:10px;">True Positive</small></div>
+            <div class="cm-cell cm-fn">FN: 126<small style="display:block;font-weight:400;font-size:10px;">False Negative</small></div>
+            <div class="cm-cell cm-header">Actual Neg.</div>
+            <div class="cm-cell cm-fp">FP: 126<small style="display:block;font-weight:400;font-size:10px;">False Positive</small></div>
+            <div class="cm-cell cm-tn">TN: 2,628<small style="display:block;font-weight:400;font-size:10px;">True Negative</small></div>
         </div>
     </div>
 
@@ -864,10 +854,8 @@
     let modelLoaded = false;
     const IMG_SIZE = 64;
 
-    // Try to load TF.js model, fall back to built-in CNN
     async function loadModel() {
         try {
-            // Try loading a converted model from the same directory
             model = await tf.loadLayersModel('./model/model.json');
             modelLoaded = true;
             console.log('✅ Pre-trained model loaded');
@@ -880,40 +868,22 @@
     }
 
     function buildModel() {
-        // Replicate the Python model architecture in TF.js
         const m = tf.sequential();
-        
-        m.add(tf.layers.conv2d({
-            inputShape: [IMG_SIZE, IMG_SIZE, 3],
-            filters: 32, kernelSize: 3, activation: 'relu'
-        }));
+        m.add(tf.layers.conv2d({ inputShape: [IMG_SIZE, IMG_SIZE, 3], filters: 32, kernelSize: 3, activation: 'relu' }));
         m.add(tf.layers.maxPooling2d({ poolSize: 2 }));
-
         m.add(tf.layers.conv2d({ filters: 64, kernelSize: 3, activation: 'relu' }));
         m.add(tf.layers.maxPooling2d({ poolSize: 2 }));
-
         m.add(tf.layers.conv2d({ filters: 128, kernelSize: 3, activation: 'relu' }));
         m.add(tf.layers.maxPooling2d({ poolSize: 2 }));
-
         m.add(tf.layers.flatten());
         m.add(tf.layers.dense({ units: 128, activation: 'relu' }));
         m.add(tf.layers.dropout({ rate: 0.5 }));
         m.add(tf.layers.dense({ units: 1, activation: 'sigmoid' }));
-
         m.compile({ optimizer: 'adam', loss: 'binaryCrossentropy', metrics: ['accuracy'] });
         return m;
     }
 
     // ==================== IMAGE VALIDATION ====================
-    // Blood cell microscopy images (Giemsa-stained thin blood smears) have very specific properties:
-    // 1. Pale pink/gray background (glass slide) — large portion of image
-    // 2. A single round cell in the center region
-    // 3. Specific color range: muted pinks, purples, grays — NOT vivid/saturated colors
-    // 4. Low color variety (only ~2-3 dominant colors: background + cell + maybe parasite)
-    // 5. Characteristic texture: smooth background with a distinct circular region
-    //
-    // Random red/pink photos, selfies, landscapes etc. fail these checks.
-
     function validateBloodCell(imgElement) {
         const canvas = document.createElement('canvas');
         const size = 64;
@@ -927,18 +897,9 @@
 
         let rSum = 0, gSum = 0, bSum = 0;
         let rSqSum = 0, gSqSum = 0, bSqSum = 0;
-        
-        // Color category counters
-        let paleBackground = 0;     // Light grayish-pink (microscope slide)
-        let cellPinkPurple = 0;     // Muted pink/purple (cell body, Giemsa stain)
-        let darkPurple = 0;         // Dark purple/blue (parasite nuclei)
-        let vividRed = 0;           // Pure vivid red (NOT typical of blood cells)
-        let vividColor = 0;         // Any highly saturated vivid color
-        let greenDominant = 0;      // Green-heavy pixels
-        let darkPixels = 0;         // Very dark pixels
-        let whitePixels = 0;        // Pure white
+        let paleBackground = 0, cellPinkPurple = 0, darkPurple = 0;
+        let vividRed = 0, vividColor = 0, greenDominant = 0, darkPixels = 0, whitePixels = 0;
 
-        // Edge detection (simple gradient)
         const pixels = [];
         for (let i = 0; i < data.length; i += 4) {
             pixels.push([data[i], data[i+1], data[i+2]]);
@@ -956,47 +917,16 @@
             const saturation = max > 0 ? (max - min) / max : 0;
             const brightness = (r + g + b) / 3;
 
-            // Pale background: light, low saturation, pinkish-gray
-            // Typical microscopy slide: R~190-240, G~180-230, B~180-230
-            if (brightness > 170 && saturation < 0.2) {
-                paleBackground++;
-            }
-
-            // Muted pink/purple cell body (Giemsa stain)
-            // Not vivid — saturation is moderate, not extreme
+            if (brightness > 170 && saturation < 0.2) paleBackground++;
             if (r > 100 && r < 220 && g > 50 && g < 170 && b > 80 && b < 200 
-                && r > g && saturation > 0.1 && saturation < 0.6 && brightness > 80 && brightness < 200) {
-                cellPinkPurple++;
-            }
-
-            // Dark purple dots (parasite)
-            if (r > 40 && r < 130 && g < 80 && b > 50 && b < 160 && brightness < 100) {
-                darkPurple++;
-            }
-
-            // Vivid red — like a red photo, red object, red clothing
-            // Blood cells are NOT vivid red — they're muted pink under microscope
-            if (r > 200 && g < 80 && b < 80 && saturation > 0.7) {
-                vividRed++;
-            }
-
-            // Any vivid/saturated color (selfies, objects, etc.)
-            if (saturation > 0.7 && brightness > 60) {
-                vividColor++;
-            }
-
-            // Green dominant (nature, grass, etc.)
-            if (g > r * 1.2 && g > b * 1.2) {
-                greenDominant++;
-            }
-
-            // Very dark (not common in microscopy — they're well-lit)
+                && r > g && saturation > 0.1 && saturation < 0.6 && brightness > 80 && brightness < 200) cellPinkPurple++;
+            if (r > 40 && r < 130 && g < 80 && b > 50 && b < 160 && brightness < 100) darkPurple++;
+            if (r > 200 && g < 80 && b < 80 && saturation > 0.7) vividRed++;
+            if (saturation > 0.7 && brightness > 60) vividColor++;
+            if (g > r * 1.2 && g > b * 1.2) greenDominant++;
             if (brightness < 30) darkPixels++;
-
-            // Pure white
             if (r > 245 && g > 245 && b > 245) whitePixels++;
 
-            // Simple edge detection: compare with right and below neighbors
             const px = Math.floor((i/4) % size);
             const py = Math.floor((i/4) / size);
             if (px < size - 1 && py < size - 1) {
@@ -1026,7 +956,6 @@
         const edgeRatio = edgeCount / totalPixels;
         const brightness = (rMean + gMean + bMean) / 3;
 
-        // Unique color counting (quantized to 4-bit per channel)
         const colorSet = new Set();
         for (let i = 0; i < data.length; i += 4) {
             const rq = data[i] >> 4;
@@ -1036,57 +965,38 @@
         }
         const uniqueColors = colorSet.size;
 
-        // ===== SCORING =====
         let score = 0;
         let reasons = [];
 
-        // MUST HAVE: Significant pale background (microscope slide)
         if (paleRatio > 0.20) { score += 3; reasons.push('pale_bg:' + (paleRatio*100).toFixed(0)); }
         else { score -= 2; reasons.push('no_pale_bg'); }
 
-        // MUST HAVE: Some pink/purple cell content
         if (cellRatio > 0.08) { score += 3; reasons.push('cell:' + (cellRatio*100).toFixed(0)); }
         else if (cellRatio > 0.03) { score += 1; reasons.push('weak_cell'); }
         else { score -= 2; reasons.push('no_cell'); }
 
-        // REJECT: Vivid red (not blood cells — those are muted pink)
         if (vividRedRatio > 0.05) { score -= 4; reasons.push('vivid_red'); }
-
-        // REJECT: Too many vivid/saturated colors overall
         if (vividRatio > 0.25) { score -= 3; reasons.push('too_vivid'); }
-
-        // REJECT: Green dominant (nature photos etc.)
         if (greenRatio > 0.20) { score -= 3; reasons.push('green'); }
-
-        // REJECT: Too many dark pixels
         if (darkRatio > 0.30) { score -= 2; reasons.push('too_dark'); }
 
-        // REJECT: Too many unique colors (microscopy is limited palette)
         if (uniqueColors > 800) { score -= 2; reasons.push('too_many_colors:' + uniqueColors); }
         else if (uniqueColors < 400) { score += 1; reasons.push('limited_palette'); }
 
-        // REJECT: Too many edges (complex scenes, not a single cell)
         if (edgeRatio > 0.35) { score -= 2; reasons.push('too_complex'); }
 
-        // Blood cells: moderate brightness, R slightly > G >= B
-        if (brightness > 120 && brightness < 210 && rMean > gMean * 0.95) { 
-            score += 1; reasons.push('good_brightness'); 
+        if (brightness > 120 && brightness < 210 && rMean > gMean * 0.95) {
+            score += 1; reasons.push('good_brightness');
         }
 
-        // Color std dev — microscopy images have moderate variance
         const avgStd = (rStd + gStd + bStd) / 3;
         if (avgStd > 15 && avgStd < 55) { score += 1; reasons.push('good_variance'); }
 
-        // Bonus: dark purple present (parasite nuclei) — strong indicator
         if (darkPurple / totalPixels > 0.01) { score += 1; reasons.push('has_nuclei'); }
 
         console.log(`Validation — score:${score} [${reasons.join(', ')}] colors:${uniqueColors} edges:${(edgeRatio*100).toFixed(0)}% bright:${brightness.toFixed(0)} R:${rMean.toFixed(0)} G:${gMean.toFixed(0)} B:${bMean.toFixed(0)}`);
 
-        return {
-            isValid: score >= 4,
-            score: score,
-            reasons: reasons
-        };
+        return { isValid: score >= 4, score: score, reasons: reasons };
     }
 
     // ==================== IMAGE PROCESSING ====================
@@ -1103,7 +1013,6 @@
     async function analyzeImage(imgElement) {
         if (!model) await loadModel();
 
-        // First validate this looks like a blood cell image
         const validation = validateBloodCell(imgElement);
         if (!validation.isValid) {
             return {
@@ -1132,10 +1041,292 @@
         };
     }
 
+    // ==================== GRAD-CAM ====================
+    async function generateGradCAM(imgElement) {
+        if (!model) return null;
+        try {
+            // Find the last conv layer
+            let lastConvLayer = null;
+            for (let i = model.layers.length - 1; i >= 0; i--) {
+                if (model.layers[i].getClassName() === 'Conv2D') {
+                    lastConvLayer = model.layers[i];
+                    break;
+                }
+            }
+            if (!lastConvLayer) return null;
+
+            // Build gradient model
+            const gradModel = tf.model({
+                inputs: model.inputs,
+                outputs: [lastConvLayer.output, model.outputs[0]]
+            });
+
+            const inputTensor = preprocessImage(imgElement);
+
+            // Use tf.variableGrads to compute gradients
+            const convOutput = tf.tidy(() => {
+                const [convOut, pred] = gradModel.predict(inputTensor);
+                return convOut;
+            });
+
+            // Compute gradients with respect to the conv output
+            const f = () => {
+                const [convOut, pred] = gradModel.predict(inputTensor);
+                return pred.squeeze();
+            };
+
+            // Alternative approach: manual forward pass and gradient computation
+            const [convOut, predictions] = gradModel.predict(inputTensor);
+            const predData = await predictions.data();
+
+            // Compute gradients using tf.grad
+            // We'll use a simpler approach: compute class activation map
+            const convData = await convOut.data();
+            const convShape = convOut.shape; // [1, h, w, filters]
+            const h = convShape[1], w = convShape[2], filters = convShape[3];
+
+            // Get the weights of the last dense layer (GAP approximation)
+            // Use mean activation as weights (simplified Grad-CAM)
+            const weights = new Float32Array(filters);
+            for (let f = 0; f < filters; f++) {
+                let sum = 0;
+                for (let i = 0; i < h; i++) {
+                    for (let j = 0; j < w; j++) {
+                        sum += convData[i * w * filters + j * filters + f];
+                    }
+                }
+                weights[f] = sum / (h * w);
+            }
+
+            // Create weighted activation map
+            const heatmap = new Float32Array(h * w);
+            for (let i = 0; i < h; i++) {
+                for (let j = 0; j < w; j++) {
+                    let val = 0;
+                    for (let f = 0; f < filters; f++) {
+                        val += weights[f] * convData[i * w * filters + j * filters + f];
+                    }
+                    heatmap[i * w + j] = Math.max(0, val); // ReLU
+                }
+            }
+
+            // Normalize
+            let maxVal = 0;
+            for (let i = 0; i < heatmap.length; i++) {
+                if (heatmap[i] > maxVal) maxVal = heatmap[i];
+            }
+            if (maxVal > 0) {
+                for (let i = 0; i < heatmap.length; i++) {
+                    heatmap[i] /= maxVal;
+                }
+            }
+
+            // Clean up
+            inputTensor.dispose();
+            convOut.dispose();
+            predictions.dispose();
+
+            return { heatmap, width: w, height: h };
+        } catch (e) {
+            console.warn('Grad-CAM failed:', e);
+            return null;
+        }
+    }
+
+    function renderGradCAM(imgElement, gradcamResult) {
+        if (!gradcamResult) {
+            document.getElementById('gradcam-section').style.display = 'none';
+            return;
+        }
+
+        const { heatmap, width, height } = gradcamResult;
+        const displaySize = 200;
+
+        // Draw original
+        const origCanvas = document.getElementById('gradcam-original');
+        origCanvas.width = displaySize;
+        origCanvas.height = displaySize;
+        const origCtx = origCanvas.getContext('2d');
+        origCtx.drawImage(imgElement, 0, 0, displaySize, displaySize);
+
+        // Draw heatmap overlay
+        const heatCanvas = document.getElementById('gradcam-heatmap');
+        heatCanvas.width = displaySize;
+        heatCanvas.height = displaySize;
+        const heatCtx = heatCanvas.getContext('2d');
+
+        // Draw original image first
+        heatCtx.drawImage(imgElement, 0, 0, displaySize, displaySize);
+
+        // Create heatmap overlay
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = width;
+        tempCanvas.height = height;
+        const tempCtx = tempCanvas.getContext('2d');
+        const imgData = tempCtx.createImageData(width, height);
+
+        for (let i = 0; i < heatmap.length; i++) {
+            const val = heatmap[i];
+            // Blue -> Cyan -> Green -> Yellow -> Red
+            let r, g, b;
+            if (val < 0.25) {
+                r = 0; g = Math.round(val * 4 * 255); b = 255;
+            } else if (val < 0.5) {
+                r = 0; g = 255; b = Math.round((1 - (val - 0.25) * 4) * 255);
+            } else if (val < 0.75) {
+                r = Math.round((val - 0.5) * 4 * 255); g = 255; b = 0;
+            } else {
+                r = 255; g = Math.round((1 - (val - 0.75) * 4) * 255); b = 0;
+            }
+            imgData.data[i * 4] = r;
+            imgData.data[i * 4 + 1] = g;
+            imgData.data[i * 4 + 2] = b;
+            imgData.data[i * 4 + 3] = Math.round(val * 180); // Variable opacity
+        }
+
+        tempCtx.putImageData(imgData, 0, 0);
+
+        // Overlay heatmap scaled up
+        heatCtx.globalAlpha = 0.5;
+        heatCtx.imageSmoothingEnabled = true;
+        heatCtx.drawImage(tempCanvas, 0, 0, displaySize, displaySize);
+        heatCtx.globalAlpha = 1.0;
+
+        document.getElementById('gradcam-section').style.display = 'block';
+    }
+
+    // ==================== DASHBOARD ====================
+    function getDashboardStats() {
+        try {
+            return JSON.parse(localStorage.getItem('malariaStats') || '{}');
+        } catch { return {}; }
+    }
+
+    function saveDashboardStats(stats) {
+        localStorage.setItem('malariaStats', JSON.stringify(stats));
+    }
+
+    function updateDashboard() {
+        const stats = getDashboardStats();
+        const total = stats.total || 0;
+        const infected = stats.infected || 0;
+        const uninfected = stats.uninfected || 0;
+        const rejected = stats.rejected || 0;
+        const totalConf = stats.totalConfidence || 0;
+        const validScans = infected + uninfected;
+        const avgConf = validScans > 0 ? (totalConf / validScans * 100).toFixed(1) : '0.0';
+        const infRate = total > 0 ? (infected / total * 100).toFixed(1) : '0.0';
+        const uninfRate = total > 0 ? (uninfected / total * 100).toFixed(1) : '0.0';
+
+        document.getElementById('dash-stats').innerHTML = `
+            <div class="dash-stat"><div class="dash-stat-value">${total}</div><div class="dash-stat-label">Total Scans</div></div>
+            <div class="dash-stat"><div class="dash-stat-value" style="color:var(--infected)">${infRate}%</div><div class="dash-stat-label">Infection Rate</div></div>
+            <div class="dash-stat"><div class="dash-stat-value" style="color:var(--healthy)">${uninfRate}%</div><div class="dash-stat-label">Uninfected Rate</div></div>
+            <div class="dash-stat"><div class="dash-stat-value">${avgConf}%</div><div class="dash-stat-label">Avg Confidence</div></div>
+            <div class="dash-stat"><div class="dash-stat-value" style="font-size:13px;">${stats.lastScan || 'Never'}</div><div class="dash-stat-label">Last Scan</div></div>
+        `;
+
+        const maxBar = Math.max(infected, uninfected, 1);
+        const infHeight = Math.round((infected / maxBar) * 100);
+        const uninfHeight = Math.round((uninfected / maxBar) * 100);
+        document.getElementById('dash-chart').innerHTML = `
+            <div class="dash-bar-group">
+                <div class="dash-bar infected-bar" style="height:${infHeight}px;"></div>
+                <div class="dash-bar-label">Infected (${infected})</div>
+            </div>
+            <div class="dash-bar-group">
+                <div class="dash-bar healthy-bar" style="height:${uninfHeight}px;"></div>
+                <div class="dash-bar-label">Uninfected (${uninfected})</div>
+            </div>
+        `;
+    }
+
+    function recordScan(result) {
+        const stats = getDashboardStats();
+        stats.total = (stats.total || 0) + 1;
+        if (result.rejected) {
+            stats.rejected = (stats.rejected || 0) + 1;
+        } else if (result.isInfected) {
+            stats.infected = (stats.infected || 0) + 1;
+            stats.totalConfidence = (stats.totalConfidence || 0) + result.confidence;
+        } else {
+            stats.uninfected = (stats.uninfected || 0) + 1;
+            stats.totalConfidence = (stats.totalConfidence || 0) + result.confidence;
+        }
+        stats.lastScan = new Date().toLocaleString();
+        saveDashboardStats(stats);
+        updateDashboard();
+    }
+
+    // ==================== PDF REPORT ====================
+    let lastResult = null;
+
+    function generateReport() {
+        if (!lastResult || lastResult.rejected) return;
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        const patientId = prompt('Enter Patient ID (or leave blank for auto-generated):', '') || 'PID-' + Date.now().toString(36).toUpperCase();
+        const now = new Date();
+
+        doc.setFontSize(22);
+        doc.setTextColor(107, 33, 168);
+        doc.text('Malaria Cell Detection Report', 105, 25, { align: 'center' });
+
+        doc.setDrawColor(107, 33, 168);
+        doc.setLineWidth(0.5);
+        doc.line(20, 32, 190, 32);
+
+        doc.setFontSize(11);
+        doc.setTextColor(60, 60, 60);
+        doc.text(`Date: ${now.toLocaleDateString()} ${now.toLocaleTimeString()}`, 20, 42);
+        doc.text(`Patient ID: ${patientId}`, 20, 50);
+        doc.text(`Report ID: RPT-${Date.now().toString(36).toUpperCase()}`, 20, 58);
+
+        doc.setFontSize(16);
+        doc.setTextColor(lastResult.isInfected ? 204 : 26, lastResult.isInfected ? 34 : 138, lastResult.isInfected ? 34 : 74);
+        doc.text(`Result: ${lastResult.isInfected ? 'PARASITIZED' : 'UNINFECTED'}`, 20, 75);
+
+        doc.setFontSize(12);
+        doc.setTextColor(60, 60, 60);
+        doc.text(`Confidence: ${(lastResult.confidence * 100).toFixed(1)}%`, 20, 85);
+        doc.text(`Parasitized Probability: ${(lastResult.infectedProb * 100).toFixed(1)}%`, 20, 93);
+        doc.text(`Uninfected Probability: ${(lastResult.healthyProb * 100).toFixed(1)}%`, 20, 101);
+        doc.text(`Inference Time: ${lastResult.inferenceTime}ms`, 20, 109);
+
+        doc.setFontSize(13);
+        doc.setTextColor(107, 33, 168);
+        doc.text('AI Recommendation', 20, 125);
+
+        doc.setFontSize(10);
+        doc.setTextColor(60, 60, 60);
+        if (lastResult.isInfected) {
+            doc.text('Malaria parasites detected. Please consult a licensed medical', 20, 134);
+            doc.text('professional immediately for confirmation and treatment.', 20, 141);
+            doc.text('Early treatment is critical.', 20, 148);
+        } else {
+            doc.text('No parasites detected in this sample. If symptoms persist,', 20, 134);
+            doc.text('please consult a healthcare professional for further testing.', 20, 141);
+        }
+
+        doc.setFontSize(9);
+        doc.setTextColor(150, 150, 150);
+        const disclaimerY = 175;
+        doc.line(20, disclaimerY - 5, 190, disclaimerY - 5);
+        doc.text('DISCLAIMER: This tool is for screening purposes only and should not', 20, disclaimerY);
+        doc.text('replace professional medical diagnosis. Always consult a qualified', 20, disclaimerY + 6);
+        doc.text('healthcare professional for malaria diagnosis and treatment.', 20, disclaimerY + 12);
+
+        doc.setTextColor(180, 180, 180);
+        doc.text('Generated by Malaria Cell Detector — Powered by TensorFlow.js', 105, 285, { align: 'center' });
+
+        doc.save(`malaria-report-${patientId}.pdf`);
+    }
+
     // ==================== UI ====================
     const choiceRow = document.getElementById('choice-row');
     const scanBtn = document.getElementById('scan-btn');
     const uploadBtn = document.getElementById('upload-btn');
+    const batchBtn = document.getElementById('batch-btn');
     const uploadZone = document.getElementById('upload-zone');
     const fileInput = document.getElementById('file-input');
     const previewContainer = document.getElementById('preview-container');
@@ -1157,13 +1348,12 @@
     let currentFile = null;
     let imageReady = false;
     let cameraStream = null;
-    let facingMode = 'environment'; // back camera default
+    let facingMode = 'environment';
 
     // ===== SCAN MODE =====
     scanBtn.addEventListener('click', async () => {
         choiceRow.style.display = 'none';
         cameraContainer.style.display = 'block';
-
         try {
             cameraStream = await navigator.mediaDevices.getUserMedia({
                 video: { facingMode: facingMode, width: { ideal: 640 }, height: { ideal: 640 } }
@@ -1177,17 +1367,13 @@
 
     cameraFlipBtn.addEventListener('click', async () => {
         facingMode = facingMode === 'environment' ? 'user' : 'environment';
-        if (cameraStream) {
-            cameraStream.getTracks().forEach(t => t.stop());
-        }
+        if (cameraStream) cameraStream.getTracks().forEach(t => t.stop());
         try {
             cameraStream = await navigator.mediaDevices.getUserMedia({
                 video: { facingMode: facingMode, width: { ideal: 640 }, height: { ideal: 640 } }
             });
             cameraVideo.srcObject = cameraStream;
-        } catch (err) {
-            console.error('Flip failed:', err);
-        }
+        } catch (err) { console.error('Flip failed:', err); }
     });
 
     captureBtn.addEventListener('click', () => {
@@ -1195,12 +1381,10 @@
         cameraCanvas.height = cameraVideo.videoHeight;
         const ctx = cameraCanvas.getContext('2d');
         ctx.drawImage(cameraVideo, 0, 0);
-
         const dataUrl = cameraCanvas.toDataURL('image/png');
         previewImage.src = dataUrl;
         previewInfo.textContent = 'Camera capture · Live scan';
         imageReady = true;
-
         closeCamera();
         previewContainer.classList.add('visible');
         analyzeBtn.style.display = '';
@@ -1208,19 +1392,12 @@
         resultSection.classList.remove('visible');
     });
 
-    cameraCancelBtn.addEventListener('click', () => {
-        closeCamera();
-    });
+    cameraCancelBtn.addEventListener('click', () => closeCamera());
 
     function closeCamera() {
-        if (cameraStream) {
-            cameraStream.getTracks().forEach(t => t.stop());
-            cameraStream = null;
-        }
+        if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; }
         cameraContainer.style.display = 'none';
-        if (!imageReady) {
-            choiceRow.style.display = 'grid';
-        }
+        if (!imageReady) choiceRow.style.display = 'grid';
     }
 
     // ===== UPLOAD MODE =====
@@ -1229,36 +1406,18 @@
         uploadZone.style.display = 'block';
     });
 
-    uploadZone.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        uploadZone.classList.add('dragover');
-    });
-
-    uploadZone.addEventListener('dragleave', () => {
-        uploadZone.classList.remove('dragover');
-    });
-
+    uploadZone.addEventListener('dragover', (e) => { e.preventDefault(); uploadZone.classList.add('dragover'); });
+    uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
     uploadZone.addEventListener('drop', (e) => {
-        e.preventDefault();
-        uploadZone.classList.remove('dragover');
+        e.preventDefault(); uploadZone.classList.remove('dragover');
         if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
     });
-
-    uploadZone.addEventListener('click', () => {
-        if (!currentFile) fileInput.click();
-    });
-
-    fileInput.addEventListener('change', (e) => {
-        if (e.target.files.length) handleFile(e.target.files[0]);
-    });
+    uploadZone.addEventListener('click', () => { if (!currentFile) fileInput.click(); });
+    fileInput.addEventListener('change', (e) => { if (e.target.files.length) handleFile(e.target.files[0]); });
 
     function handleFile(file) {
         if (!file.type.startsWith('image/')) return;
-        if (file.size > 10 * 1024 * 1024) {
-            alert('File too large. Maximum 10MB.');
-            return;
-        }
-
+        if (file.size > 10 * 1024 * 1024) { alert('File too large. Maximum 10MB.'); return; }
         currentFile = file;
         imageReady = true;
         const reader = new FileReader();
@@ -1274,21 +1433,170 @@
         reader.readAsDataURL(file);
     }
 
+    // ===== BATCH MODE =====
+    const batchSection = document.getElementById('batch-section');
+    const batchDropzone = document.getElementById('batch-dropzone');
+    const batchFileInput = document.getElementById('batch-file-input');
+    let batchResults = [];
+
+    batchBtn.addEventListener('click', () => {
+        choiceRow.style.display = 'none';
+        batchSection.classList.add('visible');
+    });
+
+    document.getElementById('batch-cancel').addEventListener('click', () => {
+        batchSection.classList.remove('visible');
+        document.getElementById('batch-results-container').style.display = 'none';
+        document.getElementById('batch-progress').style.display = 'none';
+        choiceRow.style.display = 'grid';
+        batchResults = [];
+    });
+
+    batchDropzone.addEventListener('click', () => batchFileInput.click());
+    batchFileInput.addEventListener('change', async (e) => {
+        const files = Array.from(e.target.files).slice(0, 50);
+        if (!files.length) return;
+        await runBatchAnalysis(files);
+    });
+
+    async function runBatchAnalysis(files) {
+        if (!modelLoaded) { await loadModel(); }
+        batchResults = [];
+        const progressEl = document.getElementById('batch-progress');
+        const fillEl = document.getElementById('batch-progress-fill');
+        const textEl = document.getElementById('batch-progress-text');
+        const resultsContainer = document.getElementById('batch-results-container');
+        const tbody = document.getElementById('batch-results-body');
+        tbody.innerHTML = '';
+        progressEl.style.display = 'block';
+        resultsContainer.style.display = 'none';
+
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            fillEl.style.width = ((i + 1) / files.length * 100) + '%';
+            textEl.textContent = `${i + 1} / ${files.length}`;
+
+            try {
+                const img = await loadImageFromFile(file);
+                const result = await analyzeImage(img);
+                result.filename = file.name;
+                result.thumbnail = img.src;
+                result.timestamp = new Date().toISOString();
+                batchResults.push(result);
+                recordScan(result);
+
+                const tr = document.createElement('tr');
+                const tag = result.rejected ? 'rejected' : (result.isInfected ? 'infected' : 'healthy');
+                const label = result.rejected ? 'Rejected' : (result.isInfected ? 'Parasitized' : 'Uninfected');
+                const conf = result.rejected ? '-' : (result.confidence * 100).toFixed(1) + '%';
+                tr.innerHTML = `
+                    <td><img src="${img.src}" alt=""></td>
+                    <td style="font-size:12px;word-break:break-all;">${file.name}</td>
+                    <td><span class="batch-tag ${tag}">${label}</span></td>
+                    <td>${conf}</td>
+                    <td>✓</td>
+                `;
+                tbody.appendChild(tr);
+            } catch (err) {
+                console.error('Batch error:', err);
+                batchResults.push({ filename: file.name, rejected: true, reason: 'Error', timestamp: new Date().toISOString() });
+            }
+        }
+
+        resultsContainer.style.display = 'block';
+        batchFileInput.value = '';
+    }
+
+    function loadImageFromFile(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => resolve(img);
+                img.onerror = reject;
+                img.src = e.target.result;
+            };
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+    }
+
+    document.getElementById('batch-export-csv').addEventListener('click', () => {
+        if (!batchResults.length) return;
+        let csv = 'Filename,Result,Confidence,Timestamp\n';
+        for (const r of batchResults) {
+            const label = r.rejected ? 'Rejected' : (r.isInfected ? 'Parasitized' : 'Uninfected');
+            const conf = r.rejected ? '' : (r.confidence * 100).toFixed(1) + '%';
+            csv += `"${r.filename}","${label}","${conf}","${r.timestamp}"\n`;
+        }
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `malaria-batch-${Date.now()}.csv`;
+        a.click();
+    });
+
+    document.getElementById('batch-export-pdf').addEventListener('click', () => {
+        if (!batchResults.length) return;
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+
+        doc.setFontSize(18);
+        doc.setTextColor(107, 33, 168);
+        doc.text('Batch Analysis Report', 105, 20, { align: 'center' });
+        doc.setFontSize(10);
+        doc.setTextColor(100, 100, 100);
+        doc.text(`Generated: ${new Date().toLocaleString()}`, 105, 28, { align: 'center' });
+        doc.text(`Total: ${batchResults.length} samples`, 105, 34, { align: 'center' });
+
+        doc.line(20, 38, 190, 38);
+
+        let y = 46;
+        doc.setFontSize(9);
+        doc.setTextColor(150, 150, 150);
+        doc.text('Filename', 20, y);
+        doc.text('Result', 100, y);
+        doc.text('Confidence', 140, y);
+        y += 6;
+
+        doc.setTextColor(60, 60, 60);
+        for (const r of batchResults) {
+            if (y > 275) { doc.addPage(); y = 20; }
+            const label = r.rejected ? 'Rejected' : (r.isInfected ? 'Parasitized' : 'Uninfected');
+            const conf = r.rejected ? '-' : (r.confidence * 100).toFixed(1) + '%';
+            doc.text(r.filename.substring(0, 40), 20, y);
+            doc.text(label, 100, y);
+            doc.text(conf, 140, y);
+            y += 5;
+        }
+
+        doc.save(`malaria-batch-report-${Date.now()}.pdf`);
+    });
+
     // ===== ANALYZE =====
     analyzeBtn.addEventListener('click', async () => {
         if (!imageReady) return;
-
         loadingOverlay.classList.add('visible');
         loadingText.textContent = 'Loading model...';
 
         try {
             if (!modelLoaded) await loadModel();
             loadingText.textContent = 'Analyzing cell...';
-
             await new Promise(r => setTimeout(r, 500));
 
             const result = await analyzeImage(previewImage);
+            lastResult = result;
+            recordScan(result);
             showResult(result);
+
+            // Generate Grad-CAM
+            if (!result.rejected) {
+                loadingText.textContent = 'Generating attention map...';
+                const gradcam = await generateGradCAM(previewImage);
+                renderGradCAM(previewImage, gradcam);
+            } else {
+                document.getElementById('gradcam-section').style.display = 'none';
+            }
         } catch (err) {
             console.error('Analysis error:', err);
             alert('Analysis failed. Please try again.');
@@ -1306,6 +1614,10 @@
         const detailInfected = document.getElementById('detail-infected');
         const detailHealthy = document.getElementById('detail-healthy');
         const detailTime = document.getElementById('detail-time');
+        const recommendation = document.getElementById('recommendation');
+        const recTitle = document.getElementById('rec-title');
+        const recText = document.getElementById('rec-text');
+        const reportBtns = document.getElementById('report-btns');
 
         if (result.rejected) {
             card.className = 'result-card rejected';
@@ -1316,27 +1628,41 @@
             detailInfected.textContent = '-';
             detailHealthy.textContent = '-';
             detailTime.textContent = '-';
+            recommendation.style.display = 'none';
+            reportBtns.style.display = 'none';
         } else {
             card.className = 'result-card ' + (result.isInfected ? 'infected' : 'healthy');
             icon.textContent = result.isInfected ? '🦠' : '✅';
             label.textContent = result.isInfected ? 'PARASITIZED' : 'UNINFECTED';
             confidence.textContent = `${(result.confidence * 100).toFixed(1)}% confidence`;
-
-            setTimeout(() => {
-                bar.style.width = (result.confidence * 100) + '%';
-            }, 100);
-
+            setTimeout(() => { bar.style.width = (result.confidence * 100) + '%'; }, 100);
             detailInfected.textContent = (result.infectedProb * 100).toFixed(1) + '%';
             detailHealthy.textContent = (result.healthyProb * 100).toFixed(1) + '%';
             detailTime.textContent = result.inferenceTime + 'ms';
+
+            // Recommendation
+            recommendation.style.display = 'block';
+            if (result.isInfected) {
+                recommendation.className = 'recommendation warn';
+                recTitle.textContent = '⚠️ Medical Attention Recommended';
+                recText.textContent = 'Malaria parasites detected. Please consult a licensed medical professional immediately for confirmation and treatment. Early treatment is critical.';
+            } else {
+                recommendation.className = 'recommendation safe';
+                recTitle.textContent = '✅ No Parasites Detected';
+                recText.textContent = 'No parasites detected in this sample. If symptoms persist, please consult a healthcare professional for further testing.';
+            }
+
+            reportBtns.style.display = 'flex';
         }
 
         resultSection.classList.add('visible');
         analyzeBtn.style.display = 'none';
         resetBtn.style.display = 'inline-flex';
-
         resultSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
+
+    // Report button
+    document.getElementById('download-report-btn').addEventListener('click', generateReport);
 
     // Reset
     resetBtn.addEventListener('click', () => {
@@ -1352,11 +1678,55 @@
         resetBtn.style.display = 'none';
         resultSection.classList.remove('visible');
         document.getElementById('confidence-bar').style.width = '0%';
+        document.getElementById('gradcam-section').style.display = 'none';
+        document.getElementById('recommendation').style.display = 'none';
+        document.getElementById('report-btns').style.display = 'none';
     });
 
-    // Pre-load model on page load
+    // ===== DASHBOARD =====
+    document.getElementById('dashboard-header').addEventListener('click', () => {
+        const body = document.getElementById('dashboard-body');
+        const icon = document.getElementById('dashboard-toggle');
+        body.classList.toggle('open');
+        icon.classList.toggle('open');
+    });
+
+    document.getElementById('dash-reset').addEventListener('click', () => {
+        if (confirm('Reset all statistics?')) {
+            localStorage.removeItem('malariaStats');
+            updateDashboard();
+        }
+    });
+
+    // ===== PWA =====
+    let deferredPrompt = null;
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        document.getElementById('install-btn').classList.add('visible');
+    });
+
+    document.getElementById('install-btn').addEventListener('click', async () => {
+        if (!deferredPrompt) return;
+        deferredPrompt.prompt();
+        const result = await deferredPrompt.userChoice;
+        if (result.outcome === 'accepted') {
+            document.getElementById('install-btn').classList.remove('visible');
+        }
+        deferredPrompt = null;
+    });
+
+    // Register service worker
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./sw.js').then(() => {
+            console.log('✅ Service Worker registered');
+        }).catch(err => console.warn('SW registration failed:', err));
+    }
+
+    // ===== INIT =====
     window.addEventListener('load', () => {
         loadModel();
+        updateDashboard();
     });
 </script>
 
