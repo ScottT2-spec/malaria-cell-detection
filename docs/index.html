@@ -905,11 +905,14 @@
     }
 
     // ==================== IMAGE VALIDATION ====================
-    // Blood cell microscopy images (Giemsa-stained) have distinctive color profiles:
-    // - Pink/purple staining from the dye
-    // - Relatively uniform background
-    // - Small image content (single cells)
-    // This checks color distribution to reject non-blood-cell images.
+    // Blood cell microscopy images (Giemsa-stained thin blood smears) have very specific properties:
+    // 1. Pale pink/gray background (glass slide) — large portion of image
+    // 2. A single round cell in the center region
+    // 3. Specific color range: muted pinks, purples, grays — NOT vivid/saturated colors
+    // 4. Low color variety (only ~2-3 dominant colors: background + cell + maybe parasite)
+    // 5. Characteristic texture: smooth background with a distinct circular region
+    //
+    // Random red/pink photos, selfies, landscapes etc. fail these checks.
 
     function validateBloodCell(imgElement) {
         const canvas = document.createElement('canvas');
@@ -923,76 +926,166 @@
         const totalPixels = size * size;
 
         let rSum = 0, gSum = 0, bSum = 0;
-        let pinkPurpleCount = 0;
-        let paleBackgroundCount = 0;
-        let saturatedCount = 0;
+        let rSqSum = 0, gSqSum = 0, bSqSum = 0;
+        
+        // Color category counters
+        let paleBackground = 0;     // Light grayish-pink (microscope slide)
+        let cellPinkPurple = 0;     // Muted pink/purple (cell body, Giemsa stain)
+        let darkPurple = 0;         // Dark purple/blue (parasite nuclei)
+        let vividRed = 0;           // Pure vivid red (NOT typical of blood cells)
+        let vividColor = 0;         // Any highly saturated vivid color
+        let greenDominant = 0;      // Green-heavy pixels
+        let darkPixels = 0;         // Very dark pixels
+        let whitePixels = 0;        // Pure white
+
+        // Edge detection (simple gradient)
+        const pixels = [];
+        for (let i = 0; i < data.length; i += 4) {
+            pixels.push([data[i], data[i+1], data[i+2]]);
+        }
+
+        let edgeCount = 0;
 
         for (let i = 0; i < data.length; i += 4) {
             const r = data[i], g = data[i+1], b = data[i+2];
             rSum += r; gSum += g; bSum += b;
+            rSqSum += r*r; gSqSum += g*g; bSqSum += b*b;
 
-            // Detect pink/purple tones (Giemsa stain)
-            // Pink: R high, G moderate-low, B moderate
-            // Purple: R moderate, G low, B moderate-high
-            if ((r > 120 && g < 160 && b > 80 && r > g) || 
-                (r > 80 && g < 100 && b > 100)) {
-                pinkPurpleCount++;
-            }
-
-            // Pale/light background typical of microscopy
-            if (r > 180 && g > 180 && b > 180) {
-                paleBackgroundCount++;
-            }
-
-            // Check saturation
             const max = Math.max(r, g, b);
             const min = Math.min(r, g, b);
-            if (max > 0 && (max - min) / max > 0.15) {
-                saturatedCount++;
+            const saturation = max > 0 ? (max - min) / max : 0;
+            const brightness = (r + g + b) / 3;
+
+            // Pale background: light, low saturation, pinkish-gray
+            // Typical microscopy slide: R~190-240, G~180-230, B~180-230
+            if (brightness > 170 && saturation < 0.2) {
+                paleBackground++;
+            }
+
+            // Muted pink/purple cell body (Giemsa stain)
+            // Not vivid — saturation is moderate, not extreme
+            if (r > 100 && r < 220 && g > 50 && g < 170 && b > 80 && b < 200 
+                && r > g && saturation > 0.1 && saturation < 0.6 && brightness > 80 && brightness < 200) {
+                cellPinkPurple++;
+            }
+
+            // Dark purple dots (parasite)
+            if (r > 40 && r < 130 && g < 80 && b > 50 && b < 160 && brightness < 100) {
+                darkPurple++;
+            }
+
+            // Vivid red — like a red photo, red object, red clothing
+            // Blood cells are NOT vivid red — they're muted pink under microscope
+            if (r > 200 && g < 80 && b < 80 && saturation > 0.7) {
+                vividRed++;
+            }
+
+            // Any vivid/saturated color (selfies, objects, etc.)
+            if (saturation > 0.7 && brightness > 60) {
+                vividColor++;
+            }
+
+            // Green dominant (nature, grass, etc.)
+            if (g > r * 1.2 && g > b * 1.2) {
+                greenDominant++;
+            }
+
+            // Very dark (not common in microscopy — they're well-lit)
+            if (brightness < 30) darkPixels++;
+
+            // Pure white
+            if (r > 245 && g > 245 && b > 245) whitePixels++;
+
+            // Simple edge detection: compare with right and below neighbors
+            const px = Math.floor((i/4) % size);
+            const py = Math.floor((i/4) / size);
+            if (px < size - 1 && py < size - 1) {
+                const rightIdx = (py * size + px + 1);
+                const belowIdx = ((py+1) * size + px);
+                if (rightIdx < pixels.length && belowIdx < pixels.length) {
+                    const dr = Math.abs(r - pixels[rightIdx][0]) + Math.abs(g - pixels[rightIdx][1]) + Math.abs(b - pixels[rightIdx][2]);
+                    const db = Math.abs(r - pixels[belowIdx][0]) + Math.abs(g - pixels[belowIdx][1]) + Math.abs(b - pixels[belowIdx][2]);
+                    if (dr > 60 || db > 60) edgeCount++;
+                }
             }
         }
 
         const rMean = rSum / totalPixels;
         const gMean = gSum / totalPixels;
         const bMean = bSum / totalPixels;
-        const pinkPurpleRatio = pinkPurpleCount / totalPixels;
-        const paleRatio = paleBackgroundCount / totalPixels;
+        const rStd = Math.sqrt(rSqSum / totalPixels - rMean * rMean);
+        const gStd = Math.sqrt(gSqSum / totalPixels - gMean * gMean);
+        const bStd = Math.sqrt(bSqSum / totalPixels - bMean * bMean);
 
-        // Scoring system — blood cell images should score high
-        let score = 0;
-
-        // Blood cells have pink/purple staining (at least ~10% of pixels)
-        if (pinkPurpleRatio > 0.08) score += 3;
-        else if (pinkPurpleRatio > 0.04) score += 1;
-
-        // Microscopy images often have pale backgrounds
-        if (paleRatio > 0.15 && paleRatio < 0.85) score += 2;
-
-        // Red channel typically dominates in blood cell images
-        if (rMean > gMean && rMean > bMean * 0.8) score += 1;
-
-        // Blood cells aren't super green or super blue dominant
-        if (gMean > rMean * 1.3) score -= 2;
-
-        // Microscopy images have moderate overall brightness
+        const paleRatio = paleBackground / totalPixels;
+        const cellRatio = cellPinkPurple / totalPixels;
+        const vividRedRatio = vividRed / totalPixels;
+        const vividRatio = vividColor / totalPixels;
+        const greenRatio = greenDominant / totalPixels;
+        const darkRatio = darkPixels / totalPixels;
+        const edgeRatio = edgeCount / totalPixels;
         const brightness = (rMean + gMean + bMean) / 3;
-        if (brightness > 80 && brightness < 220) score += 1;
 
-        // Very high saturation throughout suggests non-microscopy
-        const satRatio = saturatedCount / totalPixels;
-        if (satRatio > 0.9) score -= 1;
+        // Unique color counting (quantized to 4-bit per channel)
+        const colorSet = new Set();
+        for (let i = 0; i < data.length; i += 4) {
+            const rq = data[i] >> 4;
+            const gq = data[i+1] >> 4;
+            const bq = data[i+2] >> 4;
+            colorSet.add((rq << 8) | (gq << 4) | bq);
+        }
+        const uniqueColors = colorSet.size;
 
-        console.log(`Validation — score: ${score}, pink/purple: ${(pinkPurpleRatio*100).toFixed(1)}%, pale: ${(paleRatio*100).toFixed(1)}%, R:${rMean.toFixed(0)} G:${gMean.toFixed(0)} B:${bMean.toFixed(0)}`);
+        // ===== SCORING =====
+        let score = 0;
+        let reasons = [];
+
+        // MUST HAVE: Significant pale background (microscope slide)
+        if (paleRatio > 0.20) { score += 3; reasons.push('pale_bg:' + (paleRatio*100).toFixed(0)); }
+        else { score -= 2; reasons.push('no_pale_bg'); }
+
+        // MUST HAVE: Some pink/purple cell content
+        if (cellRatio > 0.08) { score += 3; reasons.push('cell:' + (cellRatio*100).toFixed(0)); }
+        else if (cellRatio > 0.03) { score += 1; reasons.push('weak_cell'); }
+        else { score -= 2; reasons.push('no_cell'); }
+
+        // REJECT: Vivid red (not blood cells — those are muted pink)
+        if (vividRedRatio > 0.05) { score -= 4; reasons.push('vivid_red'); }
+
+        // REJECT: Too many vivid/saturated colors overall
+        if (vividRatio > 0.25) { score -= 3; reasons.push('too_vivid'); }
+
+        // REJECT: Green dominant (nature photos etc.)
+        if (greenRatio > 0.20) { score -= 3; reasons.push('green'); }
+
+        // REJECT: Too many dark pixels
+        if (darkRatio > 0.30) { score -= 2; reasons.push('too_dark'); }
+
+        // REJECT: Too many unique colors (microscopy is limited palette)
+        if (uniqueColors > 800) { score -= 2; reasons.push('too_many_colors:' + uniqueColors); }
+        else if (uniqueColors < 400) { score += 1; reasons.push('limited_palette'); }
+
+        // REJECT: Too many edges (complex scenes, not a single cell)
+        if (edgeRatio > 0.35) { score -= 2; reasons.push('too_complex'); }
+
+        // Blood cells: moderate brightness, R slightly > G >= B
+        if (brightness > 120 && brightness < 210 && rMean > gMean * 0.95) { 
+            score += 1; reasons.push('good_brightness'); 
+        }
+
+        // Color std dev — microscopy images have moderate variance
+        const avgStd = (rStd + gStd + bStd) / 3;
+        if (avgStd > 15 && avgStd < 55) { score += 1; reasons.push('good_variance'); }
+
+        // Bonus: dark purple present (parasite nuclei) — strong indicator
+        if (darkPurple / totalPixels > 0.01) { score += 1; reasons.push('has_nuclei'); }
+
+        console.log(`Validation — score:${score} [${reasons.join(', ')}] colors:${uniqueColors} edges:${(edgeRatio*100).toFixed(0)}% bright:${brightness.toFixed(0)} R:${rMean.toFixed(0)} G:${gMean.toFixed(0)} B:${bMean.toFixed(0)}`);
 
         return {
-            isValid: score >= 3,
+            isValid: score >= 4,
             score: score,
-            details: {
-                pinkPurpleRatio: pinkPurpleRatio,
-                paleRatio: paleRatio,
-                brightness: brightness,
-                rMean, gMean, bMean
-            }
+            reasons: reasons
         };
     }
 
