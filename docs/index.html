@@ -922,6 +922,8 @@
 
     // ==================== IMAGE VALIDATION ====================
     function validateBloodCell(imgElement) {
+        // Lightweight gate: only reject images that are CLEARLY not medical/cell images
+        // (e.g. solid colors, pure text screenshots, extreme neon). Let the CNN decide the rest.
         const canvas = document.createElement('canvas');
         const size = 64;
         canvas.width = size;
@@ -933,107 +935,58 @@
         const totalPixels = size * size;
 
         let rSum = 0, gSum = 0, bSum = 0;
-        let rSqSum = 0, gSqSum = 0, bSqSum = 0;
-        let paleBackground = 0, cellPinkPurple = 0, darkPurple = 0;
-        let vividRed = 0, vividColor = 0, greenDominant = 0, darkPixels = 0, whitePixels = 0;
-
-        const pixels = [];
-        for (let i = 0; i < data.length; i += 4) {
-            pixels.push([data[i], data[i+1], data[i+2]]);
-        }
-
-        let edgeCount = 0;
+        let greenDominant = 0, blueDominant = 0;
+        let darkPixels = 0, whitePixels = 0;
 
         for (let i = 0; i < data.length; i += 4) {
             const r = data[i], g = data[i+1], b = data[i+2];
             rSum += r; gSum += g; bSum += b;
-            rSqSum += r*r; gSqSum += g*g; bSqSum += b*b;
 
+            const brightness = (r + g + b) / 3;
             const max = Math.max(r, g, b);
             const min = Math.min(r, g, b);
             const saturation = max > 0 ? (max - min) / max : 0;
-            const brightness = (r + g + b) / 3;
 
-            if (brightness > 170 && saturation < 0.2) paleBackground++;
-            if (r > 100 && r < 220 && g > 50 && g < 170 && b > 80 && b < 200 
-                && r > g && saturation > 0.1 && saturation < 0.6 && brightness > 80 && brightness < 200) cellPinkPurple++;
-            if (r > 40 && r < 130 && g < 80 && b > 50 && b < 160 && brightness < 100) darkPurple++;
-            if (r > 200 && g < 80 && b < 80 && saturation > 0.7) vividRed++;
-            if (saturation > 0.7 && brightness > 60) vividColor++;
-            if (g > r * 1.2 && g > b * 1.2) greenDominant++;
-            if (brightness < 30) darkPixels++;
-            if (r > 245 && g > 245 && b > 245) whitePixels++;
-
-            const px = Math.floor((i/4) % size);
-            const py = Math.floor((i/4) / size);
-            if (px < size - 1 && py < size - 1) {
-                const rightIdx = (py * size + px + 1);
-                const belowIdx = ((py+1) * size + px);
-                if (rightIdx < pixels.length && belowIdx < pixels.length) {
-                    const dr = Math.abs(r - pixels[rightIdx][0]) + Math.abs(g - pixels[rightIdx][1]) + Math.abs(b - pixels[rightIdx][2]);
-                    const db = Math.abs(r - pixels[belowIdx][0]) + Math.abs(g - pixels[belowIdx][1]) + Math.abs(b - pixels[belowIdx][2]);
-                    if (dr > 60 || db > 60) edgeCount++;
-                }
-            }
+            if (g > r * 1.4 && g > b * 1.4 && saturation > 0.4) greenDominant++;
+            if (b > r * 1.4 && b > g * 1.4 && saturation > 0.4) blueDominant++;
+            if (brightness < 10) darkPixels++;
+            if (brightness > 250) whitePixels++;
         }
 
         const rMean = rSum / totalPixels;
         const gMean = gSum / totalPixels;
         const bMean = bSum / totalPixels;
-        const rStd = Math.sqrt(rSqSum / totalPixels - rMean * rMean);
-        const gStd = Math.sqrt(gSqSum / totalPixels - gMean * gMean);
-        const bStd = Math.sqrt(bSqSum / totalPixels - bMean * bMean);
-
-        const paleRatio = paleBackground / totalPixels;
-        const cellRatio = cellPinkPurple / totalPixels;
-        const vividRedRatio = vividRed / totalPixels;
-        const vividRatio = vividColor / totalPixels;
-        const greenRatio = greenDominant / totalPixels;
-        const darkRatio = darkPixels / totalPixels;
-        const edgeRatio = edgeCount / totalPixels;
         const brightness = (rMean + gMean + bMean) / 3;
 
-        const colorSet = new Set();
-        for (let i = 0; i < data.length; i += 4) {
-            const rq = data[i] >> 4;
-            const gq = data[i+1] >> 4;
-            const bq = data[i+2] >> 4;
-            colorSet.add((rq << 8) | (gq << 4) | bq);
-        }
-        const uniqueColors = colorSet.size;
+        const greenRatio = greenDominant / totalPixels;
+        const blueRatio = blueDominant / totalPixels;
+        const darkRatio = darkPixels / totalPixels;
+        const whiteRatio = whitePixels / totalPixels;
 
-        let score = 0;
-        let reasons = [];
+        let reject = false;
+        let reason = '';
 
-        if (paleRatio > 0.20) { score += 3; reasons.push('pale_bg:' + (paleRatio*100).toFixed(0)); }
-        else { score -= 2; reasons.push('no_pale_bg'); }
+        // Only reject extreme outliers
+        if (darkRatio > 0.85) { reject = true; reason = 'Image is almost entirely black.'; }
+        else if (whiteRatio > 0.85) { reject = true; reason = 'Image is almost entirely white.'; }
+        else if (greenRatio > 0.60) { reject = true; reason = 'Image appears to be a nature/landscape photo, not a blood cell.'; }
+        else if (blueRatio > 0.60) { reject = true; reason = 'Image appears to be a sky/water photo, not a blood cell.'; }
+        else if (brightness < 15 || brightness > 248) { reject = true; reason = 'Image has extreme brightness — likely not a blood cell image.'; }
 
-        if (cellRatio > 0.08) { score += 3; reasons.push('cell:' + (cellRatio*100).toFixed(0)); }
-        else if (cellRatio > 0.03) { score += 1; reasons.push('weak_cell'); }
-        else { score -= 2; reasons.push('no_cell'); }
-
-        if (vividRedRatio > 0.05) { score -= 4; reasons.push('vivid_red'); }
-        if (vividRatio > 0.25) { score -= 3; reasons.push('too_vivid'); }
-        if (greenRatio > 0.20) { score -= 3; reasons.push('green'); }
-        if (darkRatio > 0.30) { score -= 2; reasons.push('too_dark'); }
-
-        if (uniqueColors > 800) { score -= 2; reasons.push('too_many_colors:' + uniqueColors); }
-        else if (uniqueColors < 400) { score += 1; reasons.push('limited_palette'); }
-
-        if (edgeRatio > 0.35) { score -= 2; reasons.push('too_complex'); }
-
-        if (brightness > 120 && brightness < 210 && rMean > gMean * 0.95) {
-            score += 1; reasons.push('good_brightness');
+        // Check for near-solid color (very low variance = solid fill, not a real image)
+        if (!reject) {
+            let rSq = 0, gSq = 0, bSq = 0;
+            for (let i = 0; i < data.length; i += 4) {
+                const dr = data[i] - rMean, dg = data[i+1] - gMean, db = data[i+2] - bMean;
+                rSq += dr*dr; gSq += dg*dg; bSq += db*db;
+            }
+            const avgStd = (Math.sqrt(rSq/totalPixels) + Math.sqrt(gSq/totalPixels) + Math.sqrt(bSq/totalPixels)) / 3;
+            if (avgStd < 5) { reject = true; reason = 'Image appears to be a solid color, not a blood cell.'; }
         }
 
-        const avgStd = (rStd + gStd + bStd) / 3;
-        if (avgStd > 15 && avgStd < 55) { score += 1; reasons.push('good_variance'); }
+        console.log(`Validation — reject:${reject} reason:"${reason}" bright:${brightness.toFixed(0)} R:${rMean.toFixed(0)} G:${gMean.toFixed(0)} B:${bMean.toFixed(0)}`);
 
-        if (darkPurple / totalPixels > 0.01) { score += 1; reasons.push('has_nuclei'); }
-
-        console.log(`Validation — score:${score} [${reasons.join(', ')}] colors:${uniqueColors} edges:${(edgeRatio*100).toFixed(0)}% bright:${brightness.toFixed(0)} R:${rMean.toFixed(0)} G:${gMean.toFixed(0)} B:${bMean.toFixed(0)}`);
-
-        return { isValid: score >= 4, score: score, reasons: reasons };
+        return { isValid: !reject, score: reject ? -1 : 1, reasons: [reason || 'ok'] };
     }
 
     // ==================== IMAGE PROCESSING ====================
@@ -1054,7 +1007,7 @@
         if (!validation.isValid) {
             return {
                 rejected: true,
-                reason: "This doesn't appear to be a blood cell microscopy image. Please upload a Giemsa-stained thin blood smear image.",
+                reason: validation.reasons[0] || "This doesn't appear to be a blood cell image. Please upload a microscopy blood smear image.",
                 validationScore: validation.score
             };
         }
@@ -1679,14 +1632,16 @@
 
             // Recommendation
             recommendation.style.display = 'block';
+            const lowConf = result.confidence < 0.7;
+            const confWarning = lowConf ? '\n\n⚡ Low confidence — for best results, use a Giemsa-stained thin blood smear microscopy image.' : '';
             if (result.isInfected) {
                 recommendation.className = 'recommendation warn';
                 recTitle.textContent = '⚠️ Medical Attention Recommended';
-                recText.textContent = 'Malaria parasites detected. Please consult a licensed medical professional immediately for confirmation and treatment. Early treatment is critical.';
+                recText.textContent = 'Malaria parasites detected. Please consult a licensed medical professional immediately for confirmation and treatment. Early treatment is critical.' + confWarning;
             } else {
                 recommendation.className = 'recommendation safe';
                 recTitle.textContent = '✅ No Parasites Detected';
-                recText.textContent = 'No parasites detected in this sample. If symptoms persist, please consult a healthcare professional for further testing.';
+                recText.textContent = 'No parasites detected in this sample. If symptoms persist, please consult a healthcare professional for further testing.' + confWarning;
             }
 
             reportBtns.style.display = 'flex';
