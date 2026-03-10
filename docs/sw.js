@@ -1,4 +1,4 @@
-const CACHE_NAME = 'malaria-detector-v2';
+const CACHE_NAME = 'malaria-detector-v3';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -7,9 +7,9 @@ const ASSETS_TO_CACHE = [
   './icon-512.png',
   './model/model.json',
   './model/group1-shard1of1.bin',
-  'https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0/dist/tf.min.js',
-  'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
-  'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap'
+  './tf.min.js',
+  './jspdf.umd.min.js',
+  './fonts/inter-latin.ttf'
 ];
 
 self.addEventListener('install', event => {
@@ -17,7 +17,14 @@ self.addEventListener('install', event => {
     caches.open(CACHE_NAME).then(cache => {
       return cache.addAll(ASSETS_TO_CACHE).catch(err => {
         console.warn('Some assets failed to cache:', err);
-        return cache.addAll(['./index.html', './manifest.json']);
+        // At minimum cache the core files
+        return cache.addAll([
+          './index.html',
+          './manifest.json',
+          './tf.min.js',
+          './model/model.json',
+          './model/group1-shard1of1.bin'
+        ]);
       });
     })
   );
@@ -34,24 +41,22 @@ self.addEventListener('activate', event => {
 });
 
 self.addEventListener('fetch', event => {
-  // Try to cache model files on first fetch
-  if (event.request.url.includes('/model/')) {
-    event.respondWith(
-      caches.match(event.request).then(cached => {
-        if (cached) return cached;
-        return fetch(event.request).then(response => {
-          if (response.ok) {
-            const clone = response.clone();
-            caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
-          }
-          return response;
-        });
-      })
-    );
-    return;
-  }
-
   event.respondWith(
-    caches.match(event.request).then(cached => cached || fetch(event.request))
+    caches.match(event.request).then(cached => {
+      if (cached) return cached;
+      return fetch(event.request).then(response => {
+        // Cache any successful same-origin fetches for future offline use
+        if (response.ok && event.request.url.startsWith(self.location.origin)) {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+        }
+        return response;
+      }).catch(() => {
+        // Offline fallback — return index for navigation requests
+        if (event.request.mode === 'navigate') {
+          return caches.match('./index.html');
+        }
+      });
+    })
   );
 });
