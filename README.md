@@ -48,7 +48,3 @@ It auto-detects the Kaggle dataset path. For local use, put the `cell_images/` f
 - Why stratified splits matter for balanced evaluation
 - The effect of dropout on reducing overfitting in small-ish datasets
 - Image preprocessing and normalization for neural networks
-
-## Author
-
-Scott Antwi — [GitHub](https://github.com/ScottT2-spec) · [Kaggle](https://kaggle.com/scottantwi)
