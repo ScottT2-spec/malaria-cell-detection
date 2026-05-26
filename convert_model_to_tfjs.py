@@ -1,7 +1,3 @@
-"""
-Run this in Google Colab AFTER training your malaria model.
-It converts the Keras model to TensorFlow.js format and downloads it.
-
 Steps:
 1. Train your model (run malaria_detection.py first)
 2. Run this script in the same Colab session
