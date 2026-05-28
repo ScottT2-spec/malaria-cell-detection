@@ -1,0 +1,7 @@
+{
+  "outputDirectory": ".vercel-output",
+  "public": true,
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}

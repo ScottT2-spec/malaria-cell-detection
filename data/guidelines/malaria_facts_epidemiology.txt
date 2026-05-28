@@ -1,0 +1,55 @@
+# Malaria Facts & Epidemiology
+# Sources: WHO World Malaria Report 2023, WHO Fact Sheet
+
+## Global Burden (2022 Data)
+- 249 million malaria cases globally
+- 608,000 malaria deaths
+- 94% of cases and 95% of deaths occur in Africa
+- Children under 5 account for ~80% of all malaria deaths in Africa
+- 29 countries account for 95% of global malaria cases
+
+## Most Affected Countries
+1. Nigeria: ~27% of global cases
+2. Democratic Republic of Congo: ~12%
+3. Uganda: ~5%
+4. Mozambique: ~4%
+5. Ghana: ~3%
+
+## Transmission
+- Transmitted through bites of infected female Anopheles mosquitoes
+- Peak biting time: dusk to dawn
+- Transmission depends on: climate, mosquito species, human immunity, parasite species
+- Transmission season varies by region — often aligned with rainy season
+
+## Malaria in Ghana
+- Malaria is the leading cause of morbidity in Ghana
+- Accounts for ~30% of all outpatient visits
+- Ghana Health Service follows WHO treatment guidelines
+- ACTs are first-line treatment
+- Free malaria treatment for children under 5 and pregnant women through NHIS
+
+## At-Risk Populations
+- Children under 5 years (incomplete immunity)
+- Pregnant women (reduced immunity during pregnancy)
+- People living with HIV/AIDS
+- Non-immune migrants, travelers, displaced populations
+- Communities in high-transmission areas with limited healthcare access
+
+## Malaria and AI — The Opportunity
+- Microscopy-based diagnosis requires trained technicians — scarce in rural areas
+- AI-assisted microscopy can help community health workers screen blood samples
+- Rapid identification enables faster treatment initiation
+- WHO supports digital health interventions for malaria-endemic countries
+- Key challenge: maintaining accuracy across diverse sample preparation methods
+
+## Economic Impact
+- Malaria costs Africa ~$12 billion annually in lost productivity
+- A child with malaria misses ~11 school days
+- Families in endemic areas spend up to 25% of income on malaria-related expenses
+- Malaria reduction strongly correlates with economic growth
+
+## Drug Resistance Concerns
+- Artemisinin partial resistance detected in parts of Southeast Asia and emerging in Africa (Rwanda, Uganda, Eritrea)
+- WHO monitoring through Therapeutic Efficacy Studies (TES)
+- Partner drug resistance also a concern
+- No currently approved alternative to ACTs — protecting their efficacy is critical

@@ -1,0 +1,97 @@
+# CDC Malaria Treatment Guidelines (Summary)
+# Source: CDC — Treatment of Malaria: Guidelines for Clinicians (United States)
+
+## Clinical Presentation
+
+### Symptoms
+Malaria should be suspected in any patient with fever who has traveled to or lives in a malaria-endemic area. Common symptoms include:
+- Fever (may be cyclic — every 48h for P. vivax/ovale, every 72h for P. malariae)
+- Chills and rigors
+- Headache
+- Myalgia (muscle pain)
+- Fatigue and malaise
+- Nausea, vomiting, diarrhea
+- Anemia
+- Jaundice (in severe cases)
+
+### Incubation Period
+- P. falciparum: 7-14 days
+- P. vivax: 12-18 days (can be months with dormant forms)
+- P. ovale: 12-18 days (can relapse)
+- P. malariae: 18-40 days
+- P. knowlesi: 9-12 days
+
+## Species Identification
+
+### P. falciparum — Most Dangerous
+- Multiple ring forms in single RBC
+- Banana-shaped gametocytes (crescent/sausage shape)
+- High parasitemia possible (>5%)
+- Can affect RBCs of all ages
+- Causes sequestration in capillaries → organ damage
+
+### P. vivax
+- Enlarged, pale RBCs with Schüffner's dots
+- Amoeboid trophozoites
+- Usually <2% parasitemia
+- Affects reticulocytes (young RBCs)
+
+### P. ovale
+- Oval-shaped infected RBCs with fimbriated edges
+- Schüffner's dots present
+- Low parasitemia
+
+### P. malariae
+- Band-form trophozoites
+- Normal-sized RBCs
+- Very low parasitemia
+- "Rosette" schizonts (daisy-head pattern)
+
+## Treatment Protocols (CDC)
+
+### Uncomplicated P. falciparum (Chloroquine-resistant areas — most of the world)
+Option 1: Atovaquone-proguanil (Malarone)
+- Adults: 4 tablets daily for 3 days (each tablet: 250mg atovaquone/100mg proguanil)
+- Take with food or milk
+
+Option 2: Artemether-lumefantrine (Coartem)
+- Adults: 4 tablets per dose at 0, 8, 24, 36, 48, 60 hours (total: 24 tablets)
+- Take with fatty food
+
+Option 3: Quinine sulfate + one of: doxycycline, tetracycline, or clindamycin
+- Quinine: 542mg base (=650mg salt) every 8h for 3-7 days
+- Plus doxycycline 100mg BID for 7 days
+
+### Uncomplicated P. vivax, P. ovale (Chloroquine-sensitive)
+- Chloroquine phosphate: 600mg base (=1000mg salt) immediately, then 300mg at 6, 24, 48 hours
+- PLUS Primaquine: 30mg base daily for 14 days (anti-relapse therapy)
+- Must test G6PD before primaquine!
+
+### Severe Malaria (Any Species)
+- IV artesunate: Available through CDC (call CDC Malaria Hotline)
+- Dosing: 2.4 mg/kg IV at 0, 12, 24 hours, then daily
+- If artesunate unavailable: IV quinidine gluconate with cardiac monitoring
+- This is a MEDICAL EMERGENCY — ICU-level care required
+
+## When to Suspect Severe Malaria
+- Altered mental status
+- Seizures
+- Severe anemia (Hb <7)
+- Acute kidney injury
+- ARDS / pulmonary edema
+- DIC / abnormal bleeding
+- Shock
+- Acidosis
+- Parasitemia >5%
+- Hypoglycemia
+
+## CDC Malaria Hotline
+- During business hours: 770-488-7788
+- After hours/weekends/holidays: 770-488-7100 (emergency operations center)
+- For IV artesunate availability and clinical consultation
+
+## Follow-up After Treatment
+- Repeat blood smears at 48-72 hours to confirm parasite clearance
+- If parasitemia not clearing, consider drug resistance or wrong species
+- Monitor for 28 days post-treatment
+- For P. vivax/ovale: monitor for relapse for up to 1 year

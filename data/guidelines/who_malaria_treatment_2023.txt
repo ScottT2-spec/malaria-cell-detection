@@ -1,0 +1,106 @@
+# WHO Guidelines for Malaria Treatment (2023 Summary)
+# Source: WHO Guidelines for Malaria, 14 March 2023 (WHO/UCN/GMP/2023.01 Rev.1)
+
+## Uncomplicated P. falciparum Malaria
+
+### First-line Treatment
+Artemisinin-based combination therapy (ACT) is recommended for uncomplicated P. falciparum malaria.
+
+Recommended ACTs:
+- Artemether-lumefantrine (AL): 5-24 mg/kg artemether + 29-144 mg/kg lumefantrine over 3 days
+- Artesunate-amodiaquine (AS+AQ): 4 mg/kg/day artesunate + 10 mg/kg/day amodiaquine for 3 days
+- Artesunate-mefloquine (AS+MQ): 4 mg/kg/day artesunate for 3 days + 8.3 mg/kg/day mefloquine for 3 days
+- Dihydroartemisinin-piperaquine (DHA+PPQ): 4 mg/kg/day DHA + 18 mg/kg/day PPQ for 3 days
+- Artesunate-sulfadoxine-pyrimethamine (AS+SP): where SP remains effective
+
+### Treatment Failure
+If treatment failure occurs within 14 days, use an alternative first-line ACT (not the same one used initially).
+If failure occurs after 14 days, retreat with the same first-line ACT or an alternative ACT.
+
+## Severe P. falciparum Malaria
+
+### Emergency Treatment
+Intravenous (IV) or intramuscular (IM) artesunate is the treatment of choice for severe malaria in all age groups.
+- Adults and children ≥20 kg: Artesunate 2.4 mg/kg IV or IM at 0, 12, 24 hours, then every 24 hours
+- Children <20 kg: Artesunate 3.0 mg/kg per dose (same schedule)
+- Minimum 3 doses; continue until patient can take oral medication
+- Follow with full 3-day course of ACT
+
+### Pre-referral Treatment
+If IV artesunate is not available:
+- Intramuscular artesunate, OR
+- Rectal artesunate (children <6 years: 10 mg/kg single dose), then refer immediately
+
+### Danger Signs (Severe Malaria Indicators)
+- Impaired consciousness or coma
+- Prostration (inability to sit/stand/walk)
+- Multiple convulsions (>2 in 24 hours)
+- Respiratory distress (acidotic breathing)
+- Circulatory collapse/shock
+- Clinical jaundice plus evidence of other organ dysfunction
+- Abnormal spontaneous bleeding
+- Pulmonary edema (radiological)
+
+### Laboratory Indicators of Severity
+- Hypoglycemia (blood glucose <2.2 mmol/L or <40 mg/dL)
+- Metabolic acidosis (plasma bicarbonate <15 mmol/L)
+- Severe anemia (Hb <5 g/dL or Hct <15% in children; Hb <7 g/dL in adults)
+- Hyperparasitemia (>10% parasitized RBCs)
+- Renal impairment (creatinine >265 μmol/L)
+- Hyperlactatemia (lactate >5 mmol/L)
+
+## P. vivax and P. ovale Malaria
+
+### Blood-stage Treatment
+- Chloroquine: 25 mg base/kg total over 3 days (10 mg/kg on days 1 and 2, 5 mg/kg on day 3)
+- In chloroquine-resistant areas: ACT (same as for P. falciparum)
+
+### Radical Cure (Anti-relapse)
+- Primaquine: 0.25-0.5 mg/kg/day for 14 days (to eliminate hypnozoites)
+- Tafenoquine: Single dose of 300 mg (adults; requires G6PD testing)
+- G6PD testing is REQUIRED before prescribing primaquine or tafenoquine (risk of hemolysis)
+
+## P. malariae and P. knowlesi Malaria
+- Chloroquine: same dosing as P. vivax
+- P. knowlesi can cause severe disease — treat as P. falciparum if severe
+
+## Special Populations
+
+### Pregnant Women
+- First trimester: Quinine + clindamycin for 7 days (ACTs if this is not available)
+- Second and third trimester: ACT (artemether-lumefantrine recommended)
+- Severe malaria: IV artesunate at any stage of pregnancy
+
+### Children Under 5 kg
+- ACTs can be used; dose based on body weight
+- Rectal artesunate for pre-referral treatment if injection not available
+
+### Travelers (Non-immune)
+- Treat promptly with ACT
+- Higher risk of progression to severe disease
+- Lower threshold for hospitalization
+
+## Diagnosis
+
+### Recommended Methods
+- Microscopy (gold standard): Giemsa-stained thick and thin blood films
+- Rapid Diagnostic Tests (RDTs): HRP2-based for P. falciparum; pLDH for all species
+- All suspected cases should be parasitologically confirmed before treatment
+
+### Parasitemia Classification
+- Low: <1% of red blood cells parasitized (<50,000/μL)
+- Moderate: 1-5% parasitized (50,000-250,000/μL)
+- High/Severe: >5% parasitized (>250,000/μL) — medical emergency
+
+## Prevention
+
+### Chemoprophylaxis for Travelers
+- Atovaquone-proguanil: Start 1-2 days before, daily during, 7 days after
+- Doxycycline: Start 1-2 days before, daily during, 4 weeks after
+- Mefloquine: Start 2-3 weeks before, weekly during, 4 weeks after
+
+### Vector Control
+- Long-lasting insecticidal nets (LLINs)
+- Indoor residual spraying (IRS)
+- Intermittent preventive treatment in pregnancy (IPTp) with sulfadoxine-pyrimethamine
+- Seasonal malaria chemoprevention (SMC) in children in high-transmission areas

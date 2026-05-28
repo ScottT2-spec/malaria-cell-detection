@@ -1,0 +1,47 @@
+# Blood Smear Microscopy Best Practices for Malaria Diagnosis
+# Source: WHO Malaria Microscopy Quality Assurance Manual, CDC DPDx
+
+## Thin Blood Smear
+- Shows individual RBC morphology — best for species identification
+- Fixed with methanol, stained with Giemsa (3% for 30-45 min or 10% for 10-15 min)
+- Examine under 100x oil immersion
+- Count parasitemia: % of infected RBCs per 500-2000 RBCs
+- Can identify: ring forms, trophozoites, schizonts, gametocytes
+
+## Thick Blood Smear
+- More sensitive — concentrates parasites (10-20x more than thin film)
+- Not fixed (RBCs are lysed) — parasites seen against clear background
+- Count parasites per 200-500 white blood cells
+- Better for detecting low parasitemia
+- Harder to determine species
+
+## Common Artifacts That Mimic Parasites
+- Platelets overlying RBCs (most common false positive)
+- Stain precipitate / debris
+- Howell-Jolly bodies (nuclear remnants)
+- Iron inclusion bodies (Pappenheimer bodies)
+- Bacteria in contaminated samples
+- Poor staining technique
+
+## Quality Control in AI-Assisted Microscopy
+- AI models trained on well-stained Giemsa samples may underperform on poorly stained slides
+- Lighting conditions during image capture affect model accuracy
+- Field-prepared slides have more variability than lab-prepared reference standards
+- CNN models should be validated on images from the target population and setting
+- Regular recalibration against expert microscopist readings recommended
+
+## Parasitemia Estimation
+- Method: Count infected RBCs per 500-2000 total RBCs on thin film
+- Formula: (Infected RBCs / Total RBCs counted) × 100 = % parasitemia
+- Low: <1% (favorable prognosis, oral treatment usually sufficient)
+- Moderate: 1-5% (close monitoring, consider admission)
+- High: >5% (severe malaria, IV artesunate, ICU care)
+- Hyperparasitemia (>10%): Very high mortality risk, exchange transfusion may be considered
+
+## When AI Confidence Is Low
+- If AI model confidence is below 70%, recommend:
+  1. Verify image quality (focus, staining, lighting)
+  2. Capture additional images from different fields
+  3. Request expert microscopist review
+  4. Consider RDT as complementary test
+  5. Treat clinically if symptoms are suggestive (don't wait for confirmation in severe cases)

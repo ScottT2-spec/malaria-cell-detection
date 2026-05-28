@@ -1,6 +1,26 @@
+# Environment
+.env
 __pycache__/
 *.pyc
-.env
-cell_images/
+.venv/
+venv/
+
+# Data (corrections grow over time — may want to version or not)
+data/corrections/corrections.jsonl
+data/embeddings/*.npy
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Model training artifacts
 *.h5
-web-app/
+*.keras
+training_history.png
+predictions.png
+cell_images/
+.vercel
